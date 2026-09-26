@@ -57,6 +57,7 @@ public abstract class GameObject {
         return new Rectangle((int) x, (int) y, width, height);
     }
 
+    public BufferedImage getSprite() { return sprite; }
     public double getX() { return x; }
     public double getY() { return y; }
     public int getWidth() { return width; }
