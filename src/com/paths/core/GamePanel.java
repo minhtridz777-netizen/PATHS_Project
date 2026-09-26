@@ -53,15 +53,16 @@ public class GamePanel extends JPanel implements Runnable {
     private final KeyHandler keyHandler = new KeyHandler();                 // Dev 2
     private final AssetManager assetManager = AssetManager.getInstance();   // Dev 1 (dùng chung)
 
-    private TileManager tileManager;          // Dev 3 - TODO: khởi tạo khi Dev 3 hoàn thành class
-    private Camera camera;                    // Dev 3
-    private CollisionChecker collisionChecker; // Dev 3
+    private final TileManager tileManager;          // Dev 3
+    private final Camera camera;                    // Dev 3
+    private final CollisionChecker collisionChecker; // Dev 3
 
-    private Player player;                    // Dev 2 - TODO: khởi tạo khi Dev 2 hoàn thành class Player
+    private final Player player;                    // Dev 2
 
-    private UIManager uiManager;              // Dev 5 - TODO: khởi tạo khi Dev 5 hoàn thành class
+    private final UIManager uiManager;              // Dev 5
 
-    private final GameStateManager stateManager = new GameStateManager(); // Dev 1
+    // Khởi tạo SAU CÙNG trong constructor, vì PlayState cần các module ở trên đã sẵn sàng
+    private final GameStateManager stateManager;    // Dev 1
 
     public GamePanel() {
         this.setPreferredSize(new java.awt.Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -70,15 +71,14 @@ public class GamePanel extends JPanel implements Runnable {
         this.addKeyListener(keyHandler); // Gắn KeyHandler (Dev 2) để panel nhận sự kiện bàn phím
         this.setFocusable(true); // Bắt buộc để panel có thể "nghe" phím bấm
 
-        // TODO (Dev 1 + cả team): Khi các class dưới đây đã được code xong,
-        // bỏ comment và khởi tạo đúng thứ tự: Map trước -> Player sau (vì Player
-        // cần biết vị trí spawn hợp lệ trên map) -> Camera -> UI.
-        //
-        // tileManager = new TileManager(this);
-        // collisionChecker = new CollisionChecker(tileManager);
-        // player = new Player(this, keyHandler, collisionChecker);
-        // camera = new Camera(SCREEN_WIDTH, SCREEN_HEIGHT);
-        // uiManager = new UIManager(player);
+        // Khởi tạo đúng thứ tự: Map trước -> Player sau (vì Player cần biết
+        // vị trí spawn hợp lệ trên map) -> Camera -> UI -> State (dùng tất cả ở trên).
+        tileManager = new TileManager(this);
+        collisionChecker = new CollisionChecker(tileManager);
+        player = new Player(this, keyHandler, collisionChecker);
+        camera = new Camera(SCREEN_WIDTH, SCREEN_HEIGHT);
+        uiManager = new UIManager(player);
+        stateManager = new GameStateManager(this); // Vào thẳng PlayState (Sprint 4 đổi thành MenuState)
     }
 
     /** Bắt đầu Game Loop trên Thread riêng. Được gọi 1 lần duy nhất từ Main.java */
@@ -140,13 +140,8 @@ public class GamePanel extends JPanel implements Runnable {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
-        // TODO (Dev 1): Gọi render theo State hiện tại, ví dụ:
-        // tileManager.draw(g2, camera);
-        // for (Item item : items) item.draw(g2, camera);
-        // for (Chest chest : chests) chest.draw(g2, camera);
-        // for (Monster m : monsters) m.draw(g2, camera);
-        // player.draw(g2, camera);
-        // uiManager.draw(g2); // UI vẽ theo tọa độ màn hình cố định, KHÔNG trừ camera offset
+        // Ủy quyền cho State hiện tại tự vẽ (PlayState vẽ theo đúng thứ tự layer ở trên)
+        stateManager.render(g2);
 
         g2.dispose(); // Giải phóng tài nguyên Graphics2D sau khi vẽ xong (tránh leak bộ nhớ)
     }
@@ -154,5 +149,29 @@ public class GamePanel extends JPanel implements Runnable {
     // Getter để các class khác (Player, Monster...) truy cập được panel khi cần (vd lấy KeyHandler)
     public KeyHandler getKeyHandler() {
         return keyHandler;
+    }
+
+    public TileManager getTileManager() {
+        return tileManager;
+    }
+
+    public CollisionChecker getCollisionChecker() {
+        return collisionChecker;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Camera getCamera() {
+        return camera;
+    }
+
+    public UIManager getUIManager() {
+        return uiManager;
+    }
+
+    public GameStateManager getStateManager() {
+        return stateManager;
     }
 }

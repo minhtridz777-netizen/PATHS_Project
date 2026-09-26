@@ -1,6 +1,7 @@
 package com.paths.core.state;
 
 import java.awt.Graphics2D;
+import com.paths.core.GamePanel;
 
 /**
  * PHỤ TRÁCH: Dev 1 (Leader)
@@ -14,9 +15,10 @@ public class GameStateManager {
 
     private GameState currentState;
 
-    public GameStateManager() {
-        // TODO (Dev 1): Khi MenuState được code xong, set state khởi đầu là Menu:
-        // setState(new MenuState(this));
+    public GameStateManager(GamePanel gamePanel) {
+        // Sprint 1: vào thẳng màn chơi để cả nhóm test được ngay.
+        // TODO (Dev 1, Sprint 4): khi MenuState xong, đổi thành setState(new MenuState(...));
+        setState(new PlayState(gamePanel));
     }
 
     /** Chuyển sang state mới: thoát state cũ đúng cách rồi mới vào state mới */
