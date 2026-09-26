@@ -1,0 +1,22 @@
+# Build output
+*.class
+out/
+target/
+build/
+sources.txt
+
+# IntelliJ: chia se cau hinh project (.iml, misc.xml, modules.xml) de ca nhom mo la chay,
+# nhung bo qua file ca nhan cua tung may
+.idea/workspace.xml
+.idea/shelf/
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/httpRequests/
+.idea/dataSources/
+.idea/dataSources.local.xml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
