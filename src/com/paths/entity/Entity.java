@@ -1,31 +1,25 @@
 package com.paths.entity;
 
 import com.paths.interfaces.IDamageable;
+import com.paths.world.CollisionChecker;
 
 /**
- * PHỤ TRÁCH: Dev 1 (thiết kế nền tảng). Player (Dev 2) và Monster/Boss (Dev 4) đều kế thừa từ đây.
- *
- * Entity là class cha cho "vật thể SỐNG" trong game (có máu, có tốc độ di chuyển,
- * có hướng, có thể tấn công và có thể bị đánh) - khác với GameObject "vô tri" như
- * Item hay Tile.
- *
- * Entity extends GameObject   -> THỪA KẾ (Inheritance): tái sử dụng x, y, width, height, sprite.
- * Entity implements IDamageable -> hiện thực hóa hành vi "có thể bị đánh" dùng chung
- * cho cả Player lẫn Monster, để Weapon (Dev 2) hay AI (Dev 4) đều gây damage qua
- * đúng 1 kiểu interface duy nhất (xem thêm giải thích trong IDamageable.java).
- *
- * attack() là abstract -> đây là ĐA HÌNH (Polymorphism): Player.attack() sẽ vung vũ khí
- * theo hướng đang nhìn, Monster.attack() sẽ cắn khi player lọt vào tầm, Boss.attack()
- * (kế thừa từ Monster) sẽ override lại để tung chiêu đặc biệt - cùng là entity.attack()
- * nhưng hành vi thực thi khác nhau tùy vào object thực sự là ai lúc runtime.
+ * Dev 1. Vật thể sống: máu, tốc độ, hướng, bị đánh, đẩy lùi. Lớp cha của Player và mọi quái.
+ * Lớp con gọi updateCommonTimers() đầu mỗi update() và dùng moveWithCollision() để đi không xuyên tường.
  */
 public abstract class Entity extends GameObject implements IDamageable {
 
+    public static final int HURT_FLASH_FRAMES = 12; // Số frame nhân vật nháy đỏ khi trúng đòn
+
     protected int maxHp;
     protected int currentHp;
-    protected int speed; // Số pixel di chuyển mỗi frame
+    protected int speed; // pixel mỗi frame
     protected Direction direction = Direction.DOWN;
     protected boolean alive = true;
+
+    protected int hurtTimer = 0;
+    protected double knockX = 0;
+    protected double knockY = 0;
 
     protected Entity(double x, double y, int width, int height, int maxHp, int speed) {
         super(x, y, width, height);
@@ -34,25 +28,91 @@ public abstract class Entity extends GameObject implements IDamageable {
         this.speed = speed;
     }
 
-    /**
-     * Hành vi tấn công - MỖI class con TỰ ĐỊNH NGHĨA KHÁC NHAU (xem giải thích ở trên).
-     * TODO (Dev 2 cho Player, Dev 4 cho Monster/Boss): override method này trong class con.
-     */
+    /** Hành vi tấn công. Mỗi class con tự định nghĩa (ĐA HÌNH) */
     public abstract void attack();
 
-    /**
-     * Hiện thực hóa IDamageable.takeDamage() dùng chung cho mọi Entity.
-     * Class con (Player, Monster) có thể override thêm hiệu ứng riêng (vd Player
-     * override để thêm hiệu ứng chớp đỏ màn hình) bằng cách gọi super.takeDamage(amount)
-     * rồi bổ sung logic riêng.
-     */
     @Override
     public void takeDamage(int amount) {
+        if (!alive || amount <= 0) {
+            return;
+        }
         currentHp -= amount;
+        hurtTimer = HURT_FLASH_FRAMES;
         if (currentHp <= 0) {
             currentHp = 0;
             alive = false;
+            onDeath();
         }
+    }
+
+    /** Được gọi đúng 1 lần lúc máu về 0. Class con override để rơi đồ, báo nhiệm vụ... */
+    protected void onDeath() {
+    }
+
+    /** Hồi máu, không vượt quá máu tối đa */
+    public void heal(int amount) {
+        if (alive) {
+            currentHp = Math.min(maxHp, currentHp + amount);
+        }
+    }
+
+    /** Bị đẩy lùi theo hướng từ source -> this. force khoảng 4-8 là vừa */
+    public void applyKnockback(GameObject source, double force) {
+        double dx = getCenterX() - source.getCenterX();
+        double dy = getCenterY() - source.getCenterY();
+        double len = Math.hypot(dx, dy);
+        if (len < 0.001) {
+            dx = 0;
+            dy = 1;
+            len = 1;
+        }
+        knockX = dx / len * force;
+        knockY = dy / len * force;
+    }
+
+    /**
+     * Di chuyển thêm (dx, dy) nhưng không đi xuyên tường.
+     * Xử lý riêng trục X và trục Y nên khi đi chéo vào tường vẫn trượt dọc tường được.
+     */
+    protected void moveWithCollision(double dx, double dy, CollisionChecker cc) {
+        moveAxis(dx, true, cc);
+        moveAxis(dy, false, cc);
+    }
+
+    private void moveAxis(double amount, boolean horizontal, CollisionChecker cc) {
+        double step = amount;
+        // Nếu bị chặn thì thử đi ngắn lại từng 1px, để nhân vật áp sát được vào tường
+        while (Math.abs(step) > 0.01) {
+            boolean free = horizontal ? cc.canMove(this, step, 0) : cc.canMove(this, 0, step);
+            if (free) {
+                if (horizontal) {
+                    x += step;
+                } else {
+                    y += step;
+                }
+                return;
+            }
+            step = Math.abs(step) > 1 ? step - Math.signum(step) : 0;
+        }
+    }
+
+    /** Gọi ở ĐẦU update() của class con: đếm lùi hiệu ứng nháy đỏ và xử lý bị đẩy lùi */
+    protected void updateCommonTimers(CollisionChecker cc) {
+        if (hurtTimer > 0) {
+            hurtTimer--;
+        }
+        if (Math.abs(knockX) > 0.2 || Math.abs(knockY) > 0.2) {
+            moveWithCollision(knockX, knockY, cc);
+            knockX *= 0.8;
+            knockY *= 0.8;
+        } else {
+            knockX = 0;
+            knockY = 0;
+        }
+    }
+
+    public boolean isHurt() {
+        return hurtTimer > 0;
     }
 
     @Override
@@ -72,5 +132,9 @@ public abstract class Entity extends GameObject implements IDamageable {
 
     public Direction getDirection() {
         return direction;
+    }
+
+    public int getSpeed() {
+        return speed;
     }
 }

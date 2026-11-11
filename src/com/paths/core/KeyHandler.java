@@ -2,58 +2,69 @@ package com.paths.core;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * PHỤ TRÁCH: Dev 2
- *
- * Lắng nghe sự kiện bàn phím từ Swing và lưu lại trạng thái "đang giữ phím" dưới
- * dạng các biến boolean. Class Player sẽ ĐỌC các biến boolean này mỗi frame trong
- * update() để quyết định di chuyển/tấn công - KHÔNG xử lý logic di chuyển ở đây,
- * KeyHandler chỉ có nhiệm vụ "ghi nhận trạng thái phím", tách biệt rõ Input ra khỏi Logic.
- *
- * TODO (Dev 2):
- *  1. Thêm phím tương tác (vd phím E hoặc F) để mở rương / nói chuyện NPC -> cờ interactPressed.
- *  2. Thêm phím mở Inventory (vd phím I) -> báo cho UIManager (Dev 5) biết để mở/đóng bảng túi đồ.
- *  3. Cân nhắc dùng KeyBindings thay cho KeyListener nếu gặp vấn đề mất focus.
+ * Dev 2. Ghi nhận trạng thái bàn phím, không xử lý logic game.
+ *   upPressed, attackPressed... : true suốt lúc giữ phím (di chuyển, chém)
+ *   consumePress(mã phím)       : true đúng 1 lần mỗi lần bấm (E, I, H, P, ENTER, F3)
+ * Phím: WASD/mũi tên đi, SPACE/J chém, SHIFT lướt, E tương tác, I túi đồ, H uống máu, P/ESC tạm dừng.
  */
 public class KeyHandler implements KeyListener {
 
-    public boolean upPressed, downPressed, leftPressed, rightPressed;
-    public boolean attackPressed;
-    public boolean interactPressed; // TODO (Dev 2): gán true khi nhấn phím tương tác (vd E)
+    // volatile vì phím được ghi trên luồng Swing nhưng đọc trên luồng game
+    public volatile boolean upPressed, downPressed, leftPressed, rightPressed;
+    public volatile boolean attackPressed;
+    public volatile boolean dashPressed;
+
+    private final Set<Integer> held = ConcurrentHashMap.newKeySet();
+    private final Set<Integer> justPressed = ConcurrentHashMap.newKeySet();
 
     @Override
     public void keyTyped(KeyEvent e) {
-        // Không dùng - keyTyped chỉ bắt ký tự (text input), không phù hợp cho điều khiển game
+        // Không dùng: keyTyped dành cho gõ chữ, không hợp với điều khiển game
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
-
-        switch (code) {
-            case KeyEvent.VK_W -> upPressed = true;
-            case KeyEvent.VK_S -> downPressed = true;
-            case KeyEvent.VK_A -> leftPressed = true;
-            case KeyEvent.VK_D -> rightPressed = true;
-            case KeyEvent.VK_SPACE -> attackPressed = true;
-            case KeyEvent.VK_E -> interactPressed = true;
-            default -> { /* Phím khác chưa xử lý */ }
+        // Giữ phím thì hệ điều hành gửi keyPressed liên tục; chỉ tính lần đầu
+        if (held.add(code)) {
+            justPressed.add(code);
         }
+        setHeld(code, true);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         int code = e.getKeyCode();
+        held.remove(code);
+        setHeld(code, false);
+    }
 
+    private void setHeld(int code, boolean value) {
         switch (code) {
-            case KeyEvent.VK_W -> upPressed = false;
-            case KeyEvent.VK_S -> downPressed = false;
-            case KeyEvent.VK_A -> leftPressed = false;
-            case KeyEvent.VK_D -> rightPressed = false;
-            case KeyEvent.VK_SPACE -> attackPressed = false;
-            case KeyEvent.VK_E -> interactPressed = false;
-            default -> { /* Phím khác chưa xử lý */ }
+            case KeyEvent.VK_W, KeyEvent.VK_UP -> upPressed = value;
+            case KeyEvent.VK_S, KeyEvent.VK_DOWN -> downPressed = value;
+            case KeyEvent.VK_A, KeyEvent.VK_LEFT -> leftPressed = value;
+            case KeyEvent.VK_D, KeyEvent.VK_RIGHT -> rightPressed = value;
+            case KeyEvent.VK_SPACE, KeyEvent.VK_J -> attackPressed = value;
+            case KeyEvent.VK_SHIFT -> dashPressed = value;
+            default -> { }
         }
+    }
+
+    /**
+     * Trả về true nếu phím keyCode vừa được bấm (chỉ 1 lần cho mỗi lần bấm).
+     * Ví dụ: if (keys.consumePress(KeyEvent.VK_E)) { mở rương }
+     */
+    public boolean consumePress(int keyCode) {
+        return justPressed.remove(keyCode);
+    }
+
+    /** Xóa mọi lần bấm chưa xử lý (dùng khi chuyển màn hình để phím không bị "dính" sang màn sau) */
+    public void clearPresses() {
+        justPressed.clear();
     }
 }

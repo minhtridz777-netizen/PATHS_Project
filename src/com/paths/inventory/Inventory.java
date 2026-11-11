@@ -2,41 +2,51 @@ package com.paths.inventory;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.paths.entity.object.Item;
 
-/**
- * PHỤ TRÁCH: Dev 5
- *
- * Túi đồ của người chơi: danh sách các Item đã nhặt được, có giới hạn số ô (capacity).
- * Được Item.onInteract() (Dev 4) gọi tới khi người chơi nhặt đồ, và được UIManager
- * (Dev 5) đọc để vẽ ra màn hình dạng lưới ô vuông.
- *
- * TODO (Dev 5):
- *  1. addItem(): nếu inventory đầy (items.size() >= capacity) thì không cho thêm, có thể
- *     hiện thông báo "Túi đồ đã đầy" trên UI.
- *  2. useItem(index): dùng vật phẩm tại vị trí index (vd uống potion hồi máu cho Player),
- *     sau đó removeItem tương ứng.
- *  3. (Nâng cao) gộp các item cùng loại lại thành 1 ô kèm số lượng (stack) thay vì
- *     mỗi item chiếm riêng 1 ô.
- */
+import com.paths.entity.object.Item;
+import com.paths.entity.object.ItemType;
+import com.paths.entity.player.Player;
+
+/** Dev 5. Túi đồ có giới hạn số ô. Thêm đồ qua addItem(), dùng đồ qua useItemOfType(). */
 public class Inventory {
 
-    private final List<Item> items = new ArrayList<>();
-    private final int capacity;
+    protected final List<Item> items = new ArrayList<>();
+    protected final int capacity;
 
     public Inventory(int capacity) {
         this.capacity = capacity;
     }
 
+    /** Thêm vật phẩm. Trả về false nếu túi đầy */
     public boolean addItem(Item item) {
-        if (items.size() >= capacity) {
-            return false; // Túi đồ đầy
+        if (isFull()) {
+            return false;
         }
-        return items.add(item);
+        items.add(item);
+        return true;
     }
 
     public void removeItem(Item item) {
         items.remove(item);
+    }
+
+    /** Dùng 1 vật phẩm loại type (vd uống 1 Bình máu). Trả về true nếu dùng được */
+    public boolean useItemOfType(ItemType type, Player player) {
+        return false;
+    }
+
+    public int countOf(ItemType type) {
+        int count = 0;
+        for (Item item : items) {
+            if (item.getType() == type) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public boolean isFull() {
+        return items.size() >= capacity;
     }
 
     public List<Item> getItems() {
