@@ -2,42 +2,41 @@ package com.paths.quest;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.paths.core.World;
 
-/**
- * PHỤ TRÁCH: Dev 5
- *
- * Quản lý danh sách toàn bộ quest đang hoạt động (active) của người chơi.
- * PlayState (Dev 1) sẽ gọi checkProgress() mỗi frame (hoặc mỗi khi có sự kiện liên
- * quan như giết quái/nhặt đồ) để cập nhật tiến độ quest tương ứng.
- *
- * TODO (Dev 5):
- *  1. addQuest(Quest): thêm quest mới vào activeQuests khi Player nhận quest từ NPC.
- *  2. Thêm cơ chế lắng nghe sự kiện: vd khi Monster (Dev 4) chết, gọi
- *     questManager.onMonsterKilled(monsterType) để cộng dồn tiến độ các quest liên quan
- *     đến việc giết loại quái đó.
- */
+/** Dev 5. Nhiệm vụ đang làm và đã xong. World báo sự kiện (quái chết, mở rương) để cộng tiến độ. */
 public class QuestManager {
 
-    private final List<Quest> activeQuests = new ArrayList<>();
-    private final List<Quest> completedQuests = new ArrayList<>();
+    protected final World world;
+    protected final List<Quest> activeQuests = new ArrayList<>();
+    protected final List<Quest> completedQuests = new ArrayList<>();
+
+    public QuestManager(World world) {
+        this.world = world;
+    }
 
     public void addQuest(Quest quest) {
         activeQuests.add(quest);
     }
 
-    public void checkProgress() {
-        // TODO (Dev 5): duyệt qua activeQuests, nếu quest.isCompleted() thì
-        // chuyển từ activeQuests sang completedQuests.
-        activeQuests.removeIf(q -> {
-            if (q.isCompleted()) {
-                completedQuests.add(q);
-                return true;
-            }
-            return false;
-        });
+    public void onMonsterKilled(String kind) {
+    }
+
+    public void onChestOpened() {
+    }
+
+    public void update() {
     }
 
     public List<Quest> getActiveQuests() {
         return activeQuests;
+    }
+
+    public List<Quest> getCompletedQuests() {
+        return completedQuests;
+    }
+
+    public boolean isAllCompleted() {
+        return false;
     }
 }

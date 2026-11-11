@@ -1,55 +1,45 @@
 package com.paths.ui;
 
 import java.awt.Graphics2D;
-import com.paths.entity.player.Player;
-import com.paths.inventory.Inventory;
-import com.paths.quest.QuestManager;
+import java.util.List;
+import com.paths.core.World;
 
 /**
- * PHỤ TRÁCH: Dev 5
- *
- * Điểm tổng hợp toàn bộ giao diện (HUD) của Dev 5: thanh máu, mini-map, bảng
- * inventory, bảng quest log... GamePanel (Dev 1) CHỈ gọi duy nhất uiManager.draw(g2)
- * mỗi frame, không cần biết bên trong có bao nhiêu thành phần UI - đây cũng là ví dụ
- * của tính ĐÓNG GÓI (Encapsulation): chi tiết hiển thị HUD được giấu kín bên trong
- * UIManager, các module khác chỉ thấy 1 method draw() duy nhất.
- *
- * TODO (Dev 5):
- *  1. Khởi tạo healthBar, miniMap ở vị trí cố định trên màn hình (góc trên trái/phải).
- *  2. Thêm cờ boolean isInventoryOpen; khi keyHandler báo phím "I" được bấm (phối hợp
- *     Dev 2) thì đảo trạng thái cờ này để mở/đóng bảng túi đồ.
- *  3. Vẽ thêm khung thoại (dialog box) khi đứng gần NPC hoặc rương (dùng
- *     getInteractionPrompt() từ IInteractable - phối hợp Dev 1/Dev 4).
+ * Dev 5. Toàn bộ giao diện trên màn hình (HUD), vẽ theo tọa độ màn hình cố định.
+ * Nơi khác chỉ cần gọi showMessage(). Khi túi đồ hoặc hội thoại đang mở, isBlockingGameplay() trả về true.
  */
 public class UIManager {
 
-    private final Player player;
-    private final HealthBar healthBar;
-    private final MiniMap miniMap;
-    private final Inventory inventory; // Dev 5
-    private final QuestManager questManager; // Dev 5
+    protected final World world;
 
-    public UIManager(Player player) {
-        this.player = player;
-        this.healthBar = new HealthBar(20, 20, 200, 20);
-        this.miniMap = new MiniMap(600, 20, 150, 150);
-        this.inventory = new Inventory(20);
-        this.questManager = new QuestManager();
+    public UIManager(World world) {
+        this.world = world;
+    }
+
+    public void update() {
     }
 
     public void draw(Graphics2D g2) {
-        healthBar.draw(g2, player); // Player implements IDamageable nên truyền thẳng được vào đây
-        miniMap.draw(g2, player);
-
-        // TODO (Dev 5): nếu isInventoryOpen thì vẽ thêm bảng inventory ở giữa màn hình.
-        // TODO (Dev 5): vẽ danh sách quest đang active ở góc màn hình (vd góc dưới trái).
     }
 
-    public Inventory getInventory() {
-        return inventory;
+    /** Hiện 1 dòng thông báo ngắn ở góc màn hình vài giây */
+    public void showMessage(String text) {
     }
 
-    public QuestManager getQuestManager() {
-        return questManager;
+    public boolean isInventoryOpen() {
+        return false;
+    }
+
+    /** Hiện khung hội thoại. lines là các câu thoại, bấm E/ENTER để sang câu tiếp */
+    public void showDialogue(String speaker, List<String> lines) {
+    }
+
+    public boolean isDialogueOpen() {
+        return false;
+    }
+
+    /** true khi giao diện đang chiếm màn hình (túi đồ, hội thoại) -> thế giới game tạm đứng yên */
+    public boolean isBlockingGameplay() {
+        return isInventoryOpen() || isDialogueOpen();
     }
 }

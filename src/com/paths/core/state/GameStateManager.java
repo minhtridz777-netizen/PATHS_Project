@@ -3,29 +3,24 @@ package com.paths.core.state;
 import java.awt.Graphics2D;
 import com.paths.core.GamePanel;
 
-/**
- * PHỤ TRÁCH: Dev 1 (Leader)
- *
- * Quản lý state hiện tại của game và chuyển đổi giữa các state.
- * GamePanel chỉ gọi duy nhất manager.update() / manager.render() mỗi frame,
- * không cần biết đang ở state nào -> giảm coupling, dễ mở rộng thêm state mới
- * (vd sau này thêm ShopState, CutsceneState... chỉ cần tạo class mới implements GameState).
- */
+/** Dev 1. Giữ màn hình hiện tại và chuyển màn hình bằng setState(). */
 public class GameStateManager {
 
+    private final GamePanel gamePanel;
     private GameState currentState;
 
     public GameStateManager(GamePanel gamePanel) {
-        // Sprint 1: vào thẳng màn chơi để cả nhóm test được ngay.
-        // TODO (Dev 1, Sprint 4): khi MenuState xong, đổi thành setState(new MenuState(...));
-        setState(new PlayState(gamePanel));
+        this.gamePanel = gamePanel;
+        // TODO (Dev 1, Giai đoạn 4): đổi thành setState(new MenuState(this)) khi đã có màn hình menu
+        setState(new PlayState(this));
     }
 
-    /** Chuyển sang state mới: thoát state cũ đúng cách rồi mới vào state mới */
+    /** Rời state cũ cho gọn gàng rồi mới vào state mới */
     public void setState(GameState newState) {
         if (currentState != null) {
             currentState.onExit();
         }
+        gamePanel.getKeyHandler().clearPresses(); // Phím bấm ở màn cũ không "dính" sang màn mới
         currentState = newState;
         currentState.onEnter();
     }
@@ -40,5 +35,13 @@ public class GameStateManager {
         if (currentState != null) {
             currentState.render(g2);
         }
+    }
+
+    public GamePanel getGamePanel() {
+        return gamePanel;
+    }
+
+    public GameState getCurrentState() {
+        return currentState;
     }
 }

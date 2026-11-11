@@ -1,38 +1,34 @@
 package com.paths.quest;
 
-/**
- * PHỤ TRÁCH: Dev 5
- *
- * Đại diện cho 1 nhiệm vụ (quest) trong game, vd "Tiêu diệt 3 con quái Slime"
- * hoặc "Tìm được chiếc rương kho báu ở hang động phía Bắc".
- *
- * TODO (Dev 5):
- *  1. Thêm field targetAmount + currentAmount (vd cần giết 3 quái, hiện đã giết 1).
- *  2. Thêm method updateProgress(int amount) để cộng dồn tiến độ, tự set isCompleted = true
- *     khi currentAmount >= targetAmount.
- */
+/** Dev 5. Một nhiệm vụ. targetKey là loại sự kiện được tính: KILL_SLIME, KILL_SKELETON, KILL_BOSS, OPEN_CHEST. */
 public class Quest {
 
-    private final String id;
-    private final String title;
-    private final String description;
-    private boolean completed = false;
+    protected final String id;
+    protected final String title;
+    protected final String description;
+    protected final String targetKey;
+    protected final int targetAmount;
+    protected int progress = 0;
 
-    public Quest(String id, String title, String description) {
+    public Quest(String id, String title, String description, String targetKey, int targetAmount) {
         this.id = id;
         this.title = title;
         this.description = description;
+        this.targetKey = targetKey;
+        this.targetAmount = targetAmount;
     }
 
-    public void complete() {
-        this.completed = true;
+    public void addProgress(int amount) {
     }
 
     public boolean isCompleted() {
-        return completed;
+        return false;
     }
 
     public String getId() { return id; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
+    public String getTargetKey() { return targetKey; }
+    public int getTargetAmount() { return targetAmount; }
+    public int getProgress() { return progress; }
 }

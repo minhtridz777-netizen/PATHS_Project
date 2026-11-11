@@ -37,11 +37,11 @@ Nguyên tắc chia: **chia theo MODULE/CHỨC NĂNG** (không chia theo "loại 
 PATHS/                              (Thư mục gốc project)
 ├── .gitignore
 ├── res/                            (Resources Root — ảnh, âm thanh, bản đồ)
-│   ├── player/                     → Dev 2 quản lý (sprite nhân vật)
-│   ├── monster/                    → Dev 4 quản lý (sprite quái, boss)
-│   ├── tiles/                      → Dev 3 quản lý (ảnh tile: cỏ, tường, nước...)
-│   ├── maps/                       → Dev 3 quản lý (file .txt/.csv bản đồ)
-│   └── sounds/                     → dùng chung (nhạc nền, âm thanh hiệu ứng)
+│   ├── player/                     → Dev 2 (sprite nhân vật)
+│   ├── tiles/, maps/               → Dev 3 (ảnh ô đất, file bản đồ)
+│   ├── monster/, items/            → Dev 4 (quái, Boss, vật phẩm, rương)
+│   ├── npc/                        → Dev 5 (hình NPC)
+│   └── sounds/                     → Dev 1 (nhạc nền, hiệu ứng, định dạng WAV)
 │
 └── src/
     └── com/paths/
@@ -117,88 +117,25 @@ Toàn bộ 31 file skeleton ở cấu trúc trên đã được chuẩn bị s�
 
 ---
 
-## PHẦN 2: Bản kế hoạch chi tiết (Master Plan & Sprints)
+## PHẦN 2: Kế hoạch thực hiện theo giai đoạn
 
-Tổng thời gian giả định: **4 Sprint x 1 tuần = 4 tuần** (điều chỉnh số ngày theo deadline thực tế môn học). Dùng bảng này làm **Timeline báo cáo tiến độ** hàng tuần.
+Dự án chia thành **Giai đoạn 0** (Leader dựng bộ khung) và **4 giai đoạn làm việc**. Trong mỗi giai đoạn, 5 thành viên làm **độc lập** trên nhánh Git riêng; cuối giai đoạn Leader ghép code qua Pull Request, chạy thử theo kịch bản kiểm tra, rồi giao giai đoạn tiếp theo.
 
-### Sprint 0 — Khởi tạo (trước Sprint 1, làm trong 1–2 ngày đầu)
+Điều kiện để làm độc lập: bộ khung Giai đoạn 0 đã chốt sẵn **tên và chữ ký mọi hàm dùng chung** cho cả 4 giai đoạn (thân hàm chưa viết thì trả giá trị an toàn), mỗi người chỉ sửa file trong package của mình, và mỗi người có một file `XxxTestMain` để tự chạy phần của mình bằng `core/TestWindow`.
 
-| Người phụ trách | Việc cần làm | File/Module liên quan |
-|---|---|---|
-| Dev 1 (Leader) | Tạo project IntelliJ theo Phần 1, tạo repo Git, tạo cấu trúc package, commit "khung xương" ban đầu (31 file skeleton), tạo branch `develop` | Toàn bộ `src/com/paths/**` |
-| Cả 5 Dev | Clone repo, tự build thử (`javac`/Run trong IntelliJ) để chắc chắn môi trường ai cũng chạy được, đọc kỹ toàn bộ comment TODO trong file mình phụ trách | — |
-| Dev 3 | Chuẩn bị/tìm sprite tile + vẽ thử 1 file `map01.txt` mẫu (bản đồ nhỏ 20x15 ô để test sớm) | `res/tiles/`, `res/maps/map01.txt` |
-| Dev 2 | Chuẩn bị sprite nhân vật (đi 4 hướng, tối thiểu 3 frame/hướng) | `res/player/` |
-| Dev 4 | Chuẩn bị sprite quái thường + 1 boss + item/chest | `res/monster/` |
+| | Giai đoạn 1: Thế giới | Giai đoạn 2: Chiến đấu | Giai đoạn 3: Kho báu & Nhiệm vụ | Giai đoạn 4: Hoàn thiện |
+|---|---|---|---|---|
+| **Dev 1 (Leader)** | Đặt quái lên bản đồ, chế độ debug F3 | Phát hiện nhân vật chết, chơi lại | Đặt rương, giao nhiệm vụ, bảng phím, sưu tầm âm thanh | Menu, Tạm dừng, Thua, Thắng; đặt NPC; nhạc nền; đóng gói JAR |
+| **Dev 2** | Di chuyển 8 hướng, hoạt ảnh đi bộ | Chém, vùng chém, bị đánh, bất tử | Phím E tương tác, tự nhặt đồ | Kỹ năng lướt, sprite nhân vật, âm thanh |
+| **Dev 3** | Đọc và vẽ bản đồ, camera bám theo | Va chạm tường, rung màn hình | Nước gợn sóng, hỗ trợ ảnh ô đất | Bóng tối trong hầm ngục, ảnh ô đất |
+| **Dev 4** | Vẽ Slime/Skeleton/Boss, AI tuần tra | Rượt đuổi, cắn, hiệu ứng chết | Vật phẩm, rương, bảng rơi đồ | Boss 2 pha, ảnh quái và vật phẩm, âm thanh |
+| **Dev 5** | Thanh máu, bảng trạng thái, thông báo | Bản đồ nhỏ, thanh máu Boss | Hệ thống nhiệm vụ, túi đồ | NPC Già làng, hội thoại, banner, ảnh NPC, âm thanh |
 
-**Definition of Done Sprint 0:** Cả nhóm build được project rỗng, thấy cửa sổ game đen 768x576 hiện lên, không lỗi compile.
+**Tài nguyên:** game chạy được hoàn toàn bằng hình vẽ trong code. Mỗi thành viên tự sưu tầm ảnh cho phần của mình (Leader sưu tầm âm thanh WAV) và đặt vào thư mục con tương ứng trong `res/`; có file đúng tên thì game dùng, không có thì vẫn vẽ bằng code. Nguồn của từng tài nguyên được ghi trong file `NGUON.txt` cùng thư mục.
 
----
+Mỗi giai đoạn trong hướng dẫn được chia thành các **bài nhỏ** (đọc, thêm một đoạn code, chạy thử, tick), kèm bài tập tự làm và câu hỏi bảo vệ.
 
-### Sprint 1 — Nền tảng di chuyển & Bản đồ (Core Movement)
-
-**Mục tiêu:** Nhân vật đi lại được trên bản đồ tĩnh, camera bám theo, có va chạm cơ bản.
-
-| Dev | Nhiệm vụ cụ thể | File cần hoàn thành |
-|---|---|---|
-| **Dev 1** | Hoàn thiện `GameStateManager` + `PlayState`; nối `GamePanel` gọi đúng thứ tự update/draw của Player, TileManager, Camera; hoàn thiện `AssetManager.getImage()` | `core/GamePanel.java`, `core/state/*.java`, `core/AssetManager.java` |
-| **Dev 2** | Hoàn thiện `KeyHandler` (đã có sẵn WASD, bổ sung phím tương tác E); implement di chuyển trong `Player.update()`; hoàn thiện `PlayerAnimator` load sprite 4 hướng | `core/KeyHandler.java`, `entity/player/Player.java`, `entity/player/PlayerAnimator.java` |
-| **Dev 3** | Implement `TileManager.loadMap()` đọc file `.txt`; implement `TileManager.draw()` có culling theo camera; implement `Camera.update()` bám player có clamp biên | `world/TileManager.java`, `world/Tile.java`, `world/Camera.java` |
-| **Dev 4** | Chuẩn bị class `Monster` ở trạng thái TĨNH (đứng yên, có sprite, có hitbox) để Dev 3 test va chạm cùng, CHƯA cần AI | `entity/monster/Monster.java` (bản rút gọn) |
-| **Dev 5** | Dựng khung `UIManager` + `HealthBar` hiển thị máu Player cố định (test với giá trị máu giả) | `ui/UIManager.java`, `ui/HealthBar.java` |
-
-**Điểm tích hợp cuối Sprint 1 (Dev 1 chủ trì merge):** Nhân vật đi WASD trên bản đồ thật, không xuyên tường, camera mượt, thanh máu hiện trên góc màn hình.
-
-**Definition of Done:** Chạy được demo "đi dạo" quanh 1 bản đồ nhỏ không lỗi, không giật hình.
-
----
-
-### Sprint 2 — Combat & Entity nâng cao (Combat & AI)
-
-**Mục tiêu:** Đánh nhau được với quái, quái có AI tuần tra/rượt đuổi, va chạm hoàn chỉnh.
-
-| Dev | Nhiệm vụ cụ thể | File cần hoàn thành |
-|---|---|---|
-| **Dev 1** | Điều phối tích hợp combat: đảm bảo `PlayState` giữ danh sách `List<Monster>` và gọi update/draw đúng cho từng con; review code chung `Entity.java` nếu 2 bên (Dev2, Dev4) cần chỉnh sửa | `core/state/PlayState.java`, `entity/Entity.java` |
-| **Dev 2** | Implement `Player.attack()`: tạo hitbox tấn công theo hướng, quét danh sách Monster gây damage qua `IDamageable`; thêm cooldown, animation tấn công | `entity/player/Player.java`, `entity/player/PlayerAnimator.java` |
-| **Dev 3** | Hoàn thiện `CollisionChecker.canMoveToTile()` đầy đủ 4 góc hitbox; cung cấp API va chạm Entity-Entity cho Dev 2/Dev 4 dùng chung | `world/CollisionChecker.java` |
-| **Dev 4** | Implement `Monster.attack()`; implement `PatrolBehavior` + `ChaseBehavior` (AI tuần tra/rượt đuổi dựa trên `detectionRange`); implement `Boss.java` với chiêu đặc biệt/phase | `entity/monster/Monster.java`, `entity/monster/Boss.java`, `entity/monster/ai/*.java` |
-| **Dev 5** | `HealthBar` hiển thị máu thật của Player (không còn giá trị giả); thêm thanh máu nhỏ phía trên đầu Monster/Boss | `ui/HealthBar.java` |
-
-**Definition of Done:** Player và quái đánh nhau, máu trừ đúng, quái chết biến mất, quái biết đuổi theo khi Player lại gần, Boss có ít nhất 1 chiêu khác quái thường.
-
----
-
-### Sprint 3 — Item, Kho báu, Inventory, Quest (Content & Systems)
-
-**Mục tiêu:** Hoàn thiện vòng lặp gameplay "đánh quái → rớt đồ → nhặt đồ → nhận/hoàn thành nhiệm vụ".
-
-| Dev | Nhiệm vụ cụ thể | File cần hoàn thành |
-|---|---|---|
-| **Dev 1** | Quản lý danh sách `Item`/`Chest` active trong `PlayState`, xử lý spawn/despawn item sau khi nhặt hoặc mở rương | `core/state/PlayState.java` |
-| **Dev 2** | Thêm phím tương tác E gọi `onInteract()` lên `IInteractable` gần nhất (Item/Chest); hiển thị icon nhắc "Nhấn E" khi đứng gần | `core/KeyHandler.java`, phối hợp Dev 5 |
-| **Dev 3** | Vẽ thêm 1-2 bản đồ mới (map02, map03) hoặc khu vực mở rộng; tối ưu hiệu năng vẽ tile nếu map lớn | `res/maps/`, `world/TileManager.java` |
-| **Dev 4** | Implement hệ thống rớt đồ (loot table) trong `Monster` khi chết; hoàn thiện `Chest.onInteract()` sinh vật phẩm; hoàn thiện `Item.onInteract()` thêm vào Inventory | `entity/monster/Monster.java`, `entity/object/Item.java`, `entity/object/Chest.java` |
-| **Dev 5** | Hoàn thiện `Inventory` (thêm/xóa/dùng item) + vẽ UI lưới túi đồ; hoàn thiện `Quest`/`QuestManager` (nhận quest, cập nhật tiến độ, hiển thị quest log) | `inventory/Inventory.java`, `quest/Quest.java`, `quest/QuestManager.java`, `ui/UIManager.java` |
-
-**Definition of Done:** Giết quái rớt đồ → nhặt được → hiện trong túi đồ; mở rương ra vật phẩm; có ít nhất 1 quest hoàn chỉnh từ nhận đến hoàn thành.
-
----
-
-### Sprint 4 — Hoàn thiện, Mini-map, Polish & Testing
-
-**Mục tiêu:** Game chơi được trọn vẹn từ đầu đến cuối, sửa lỗi, làm đẹp UI, chuẩn bị báo cáo/demo.
-
-| Dev | Nhiệm vụ cụ thể | File/Công việc |
-|---|---|---|
-| **Dev 1** | Thêm `MenuState` (màn hình chính), `PauseState` (tạm dừng); kiểm tra toàn bộ luồng State; fix bug tích hợp cuối cùng; chuẩn bị file build/export (JAR chạy được) | `core/state/MenuState.java`, `core/state/PauseState.java` |
-| **Dev 2** | Polish animation Player (thêm animation tấn công mượt, hiệu ứng khi bị thương); cân bằng lại tốc độ/damage | `entity/player/*.java` |
-| **Dev 3** | Hoàn thiện `MiniMap` phối hợp với Dev 5; polish tilemap (thêm vật cản trang trí); test kỹ va chạm ở mọi bản đồ | `world/*.java` |
-| **Dev 4** | Cân bằng độ khó quái/boss (máu, damage, tốc độ); test kỹ AI không bị kẹt góc tường | `entity/monster/**` |
-| **Dev 5** | Hoàn thiện `MiniMap.draw()`; polish toàn bộ UI (font, màu sắc, bố cục); viết màn hình Game Over/Chiến thắng | `ui/*.java` |
-| **Cả nhóm** | Chơi test chéo (mỗi người test module người khác), tổng hợp bug vào 1 danh sách chung, fix trước deadline | — |
-
-**Definition of Done:** Build ra file chạy được (Run configuration hoặc export JAR), chơi được trọn vẹn 1 lượt: mở game → đi khám phá → đánh quái → nhặt đồ → hoàn thành quest → gặp/đánh boss → màn hình kết thúc.
+Hướng dẫn chi tiết từng thành viên (lý thuyết, các bước, code mẫu, cách chạy thử, checklist, câu hỏi bảo vệ) nằm trong thư mục `docs/` của repo. Mở `docs/index.html` bằng trình duyệt để bắt đầu.
 
 ---
 
@@ -207,36 +144,20 @@ Tổng thời gian giả định: **4 Sprint x 1 tuần = 4 tuần** (điều ch
 ### 3.1. Sơ đồ quan hệ Class cốt lõi
 
 ```
-                         ┌───────────────────┐
-                         │   GameObject      │  (abstract)
-                         │ x, y, w, h, sprite│
-                         │ +update() [abs]   │
-                         │ +draw()   [abs]   │
-                         │ +getBounds()      │
-                         └─────────┬─────────┘
-                                   │ extends
-              ┌────────────────────┼─────────────────────┐
-              │                    │                      │
-    ┌─────────▼─────────┐  ┌───────▼────────┐   ┌─────────▼────────┐
-    │      Entity        │  │  entity.object.Item │ entity.object.Chest│
-    │ implements          │  │ implements IInteractable │
-    │   IDamageable        │  └────────────────┘   └──────────────────┘
-    │ hp, speed, direction │
-    │ +attack() [abstract] │
-    │ +takeDamage()        │
-    └─────────┬────────────┘
-              │ extends
-     ┌────────┴─────────┐
-┌────▼─────┐      ┌──────▼──────┐
-│  Player   │      │   Monster    │
-│ (Dev 2)   │      │  (Dev 4)     │
-└───────────┘      └──────┬───────┘
-                           │ extends
-                    ┌──────▼──────┐
-                    │    Boss      │
-                    │  (Dev 4)     │
-                    └──────────────┘
+                    GameObject (abstract)
+        x, y, width, height · update() · draw() · getBounds()
+              /                 |                 \
+       Entity (abstract)       Item             Chest        QuestGiverNpc
+  máu, tốc độ, takeDamage()  (IInteractable)  (IInteractable)  (IInteractable)
+     attack() abstract
+        /            \
+    Player         Monster (abstract)
+    (Dev 2)        drawBody(), getKind(), getLootTable() abstract
+                    /        |         \
+                 Slime   Skeleton     Boss          (Dev 4)
 ```
+
+Các module không gọi thẳng nhau mà đi qua `core/World` (bản đồ, Player, danh sách quái/vật phẩm/rương/NPC, nhiệm vụ, giao diện của 1 ván chơi). Màn hình được quản lý bằng State Pattern (`GameState`: Menu, Chơi, Tạm dừng, Thua, Thắng); AI quái dùng `AIState` (Tuần tra, Rượt đuổi).
 
 **Interfaces dùng xuyên suốt:**
 - `IDamageable` — bất kỳ ai "có máu, có thể bị đánh" (Player, Monster, Boss).
@@ -248,23 +169,21 @@ Tổng thời gian giả định: **4 Sprint x 1 tuần = 4 tuần** (điều ch
 - **Đa hình:** Thể hiện rõ nhất ở `Entity.attack()` (abstract) — `Player.attack()` vung vũ khí, `Monster.attack()` cắn/lao vào, `Boss.attack()` (kế thừa từ `Monster` nhưng override lại) tung chiêu đặc biệt. Khi `PlayState` duyệt qua `List<Monster>` và gọi `m.attack()`, Java tự động chạy đúng phiên bản `attack()` của object thực sự tại runtime (dynamic dispatch) — dù code gọi ra chỉ viết đúng 1 dòng.
 - Toàn bộ giải thích chi tiết hơn (kèm ví dụ cụ thể từng dòng) đã được viết ngay trong Javadoc của từng file `.java` — xem trực tiếp trong source code đính kèm.
 
-### 3.3. Danh sách skeleton code đã cung cấp (đính kèm cùng tài liệu này)
+### 3.3. Danh sách file của bộ khung (Giai đoạn 0)
 
-Toàn bộ 31 file dưới đây đã được viết sẵn, **đã compile thành công**, và có comment tiếng Việt chi tiết theo đúng format: *class/method này làm gì → ai phụ trách viết tiếp (TODO) → logic cần triển khai là gì*.
+Toàn bộ file dưới đây có sẵn trong `src/com/paths/`, đã compile thành công, comment tiếng Việt ghi rõ class làm gì, ai phụ trách, giai đoạn nào viết tiếp.
 
 | Nhóm | File |
 |---|---|
-| Entry point & Game Loop (Dev 1) | `main/Main.java`, `core/GamePanel.java` |
-| State Management (Dev 1) | `core/state/GameState.java`, `core/state/GameStateManager.java`, `core/state/PlayState.java` |
-| Asset & Input (Dev 1 / Dev 2) | `core/AssetManager.java`, `core/KeyHandler.java` |
-| Interfaces nền tảng (Dev 1) | `interfaces/IDamageable.java`, `interfaces/IInteractable.java` |
-| Class nền OOP (Dev 1) | `entity/GameObject.java`, `entity/Entity.java`, `entity/Direction.java` |
-| Player (Dev 2) | `entity/player/Player.java`, `entity/player/PlayerAnimator.java` |
-| Tilemap/Camera/Collision (Dev 3) | `world/Tile.java`, `world/TileManager.java`, `world/Camera.java`, `world/CollisionChecker.java` |
-| Monster/Boss/AI/Item/Chest (Dev 4) | `entity/monster/Monster.java`, `entity/monster/Boss.java`, `entity/monster/ai/AIState.java`, `entity/monster/ai/PatrolBehavior.java`, `entity/monster/ai/ChaseBehavior.java`, `entity/object/Item.java`, `entity/object/Chest.java` |
-| UI/Inventory/Quest (Dev 5) | `ui/UIManager.java`, `ui/HealthBar.java`, `ui/MiniMap.java`, `inventory/Inventory.java`, `quest/Quest.java`, `quest/QuestManager.java` |
+| Lõi game (Dev 1) | `main/Main.java`, `core/GamePanel.java`, `core/World.java`, `core/AssetManager.java`, `core/Sprites.java`, `core/Sound.java`, `core/TestWindow.java` |
+| Màn hình (Dev 1) | `core/state/GameState.java`, `core/state/GameStateManager.java`, `core/state/PlayState.java` (Giai đoạn 4 thêm Menu, Pause, GameOver, Victory) |
+| Lớp nền OOP (Dev 1) | `entity/GameObject.java`, `entity/Entity.java`, `entity/Direction.java`, `interfaces/IDamageable.java`, `interfaces/IInteractable.java` |
+| Nhân vật (Dev 2) | `core/KeyHandler.java`, `entity/player/Player.java`, `entity/player/PlayerAnimator.java` |
+| Thế giới (Dev 3) | `world/Tile.java`, `world/TileManager.java`, `world/Camera.java`, `world/CollisionChecker.java`, `world/LightingEffect.java` |
+| Quái & vật phẩm (Dev 4) | `entity/monster/Monster.java`, `Slime.java`, `Skeleton.java`, `Boss.java`, `entity/monster/ai/AIState.java`, `PatrolBehavior.java`, `ChaseBehavior.java`, `entity/object/Item.java`, `ItemType.java`, `Chest.java` |
+| Giao diện & nhiệm vụ (Dev 5) | `ui/UIManager.java`, `ui/HealthBar.java`, `ui/MiniMap.java`, `inventory/Inventory.java`, `quest/Quest.java`, `quest/QuestManager.java`, `quest/QuestGiverNpc.java` |
 
-> Mở trực tiếp từng file trong thư mục `src/com/paths/` đính kèm để xem đầy đủ code + comment. Mỗi Dev nên đọc kỹ TOÀN BỘ comment `TODO` trong các file thuộc phần mình phụ trách trước khi bắt tay code Sprint 1.
+> Mỗi thành viên đọc file hướng dẫn của mình trong `docs/` trước khi bắt tay code Giai đoạn 1.
 
 ---
 
@@ -273,18 +192,18 @@ Toàn bộ 31 file dưới đây đã được viết sẵn, **đã compile thà
 ### 4.1. Cấu trúc branch
 
 ```
-main        → Chỉ chứa code ĐÃ TEST ỔN ĐỊNH, dùng để nộp bài / demo. Không ai push thẳng vào đây.
+master      → Chỉ chứa code ĐÃ TEST ỔN ĐỊNH, dùng để nộp bài / demo. Không ai push thẳng vào đây.
   └── develop   → Nhánh tích hợp chung, nơi các Dev merge code vào sau khi review.
-        ├── feature/dev2-player-movement
-        ├── feature/dev3-tilemap-camera
-        ├── feature/dev4-monster-ai
-        ├── feature/dev5-inventory-ui
-        └── feature/dev1-gamestate
+        ├── feature/dev2-gd1
+        ├── feature/dev3-gd1
+        ├── feature/dev4-gd1
+        ├── feature/dev5-gd1
+        └── feature/dev1-gd1
 ```
 
 ### 4.2. Luật đặt tên branch
 
-`feature/<devN>-<mo-ta-ngan>` — ví dụ `feature/dev2-combat-cooldown`, `feature/dev4-boss-phase2`. Không code trực tiếp trên `develop` hay `main`.
+`feature/devN-gdX` (X là số giai đoạn) — ví dụ `feature/dev2-gd1`, `feature/dev4-gd3`. Không code trực tiếp trên `develop` hay `master`.
 
 ### 4.3. Quy trình làm việc (mỗi Dev lặp lại vòng này mỗi task)
 
@@ -292,17 +211,17 @@ main        → Chỉ chứa code ĐÃ TEST ỔN ĐỊNH, dùng để nộp bài
 2. `git checkout -b feature/devN-ten-task` — tạo nhánh riêng.
 3. Code + commit thường xuyên, commit message rõ ràng: `[Dev4] Implement Monster loot drop system`.
 4. Trước khi tạo Pull Request: `git checkout develop && git pull`, sau đó quay lại nhánh của mình `git merge develop` để giải quyết conflict TRƯỚC, tại máy cá nhân (dễ xử lý hơn conflict trên GitHub).
-5. Push nhánh (`git push origin feature/devN-ten-task`) → mở **Pull Request vào `develop`** (không PR thẳng vào `main`).
+5. Push nhánh (`git push origin feature/devN-ten-task`) → mở **Pull Request vào `develop`** (không PR thẳng vào `master`).
 6. **Bắt buộc có ít nhất 1 người khác review** (ưu tiên Dev 1 hoặc người có module liên quan) trước khi bấm Merge.
 7. Sau khi merge xong, xóa nhánh feature đó để repo gọn (`git branch -d ...`).
-8. Cuối mỗi Sprint, Dev 1 tạo PR từ `develop` vào `main` sau khi cả team đã test chạy ổn.
+8. Cuối mỗi giai đoạn, Dev 1 ghép các PR vào `develop`, chạy thử; xong Giai đoạn 4 thì đưa `develop` vào `master`.
 
 ### 4.4. Luật tránh conflict "vỡ project"
 
 - **Mỗi Dev chỉ sửa file trong package mình sở hữu** (theo bảng phân quyền ở Phần 1.3). Nếu cần sửa file dùng chung (`GameObject`, `Entity`, `GamePanel`, các interface...) — báo trước trong nhóm chat, để 1 người sửa tại 1 thời điểm, tránh 2 người cùng sửa song song gây conflict khó merge.
-- Không bao giờ dùng `git push --force` lên `develop`/`main`.
+- Không bao giờ dùng `git push --force` lên `develop`/`master`.
 - Không commit thư mục build (`out/`, `.idea/`, `*.class`) — đã cấu hình sẵn trong `.gitignore` đính kèm.
-- Commit nhỏ và thường xuyên (mỗi commit nên là 1 thay đổi có ý nghĩa) thay vì gộp cả tuần code vào 1 commit khổng lồ — giúp review dễ và revert khi cần cũng dễ.
+- Commit nhỏ và thường xuyên (mỗi commit nên là 1 thay đổi có ý nghĩa) thay vì gộp cả giai đoạn vào 1 commit khổng lồ — giúp review dễ và revert khi cần cũng dễ.
 - Khi gặp conflict ở file dùng chung, người gây conflict SAU (người merge `develop` về nhánh mình sau) là người có trách nhiệm resolve, không đẩy việc đó sang review.
 
 ---

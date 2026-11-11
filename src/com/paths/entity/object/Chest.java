@@ -1,65 +1,58 @@
 package com.paths.entity.object;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
-import java.util.List;
+
+import com.paths.core.GamePanel;
+import com.paths.core.World;
 import com.paths.entity.GameObject;
 import com.paths.entity.player.Player;
 import com.paths.interfaces.IInteractable;
 import com.paths.world.Camera;
 
-/**
- * PHỤ TRÁCH: Dev 4
- *
- * Rương kho báu: đứng yên trên map, khi Player bấm E để mở thì "nhả" ra danh sách
- * Item bên trong (loot). Cũng implements IInteractable giống Item, nhưng hành vi
- * onInteract() hoàn toàn khác (mở rương thay vì nhặt trực tiếp) - MINH HỌA ĐA HÌNH:
- * PlayState xử lý Item và Chest bằng CÙNG một đoạn code (ép kiểu IInteractable rồi
- * gọi onInteract()), nhưng kết quả thực thi khác nhau tùy loại object.
- *
- * TODO (Dev 4):
- *  1. Đổi sprite khi isOpen = true (rương mở nắp).
- *  2. onInteract(): nếu chưa mở thì set isOpen = true, sinh ngẫu nhiên loot rồi
- *     tạo ra các Item mới trên map xung quanh rương (phối hợp Dev 1 để thêm vào danh sách
- *     item đang active trong PlayState).
- */
+/** Dev 4. Rương kho báu: bấm E để mở, vật phẩm văng ra xung quanh. Rương vàng (golden) chắc chắn có Kiếm sắt. */
 public class Chest extends GameObject implements IInteractable {
 
-    private boolean isOpen = false;
-    private final List<Item> loot = new ArrayList<>();
+    protected final World world;
+    private final boolean golden;
+    private boolean open = false;
 
-    public Chest(double x, double y, int width, int height) {
-        super(x, y, width, height);
+    public Chest(World world, double x, double y, boolean golden) {
+        super(x, y, GamePanel.TILE_SIZE, GamePanel.TILE_SIZE);
+        this.world = world;
+        this.golden = golden;
     }
 
     @Override
     public void update() {
-        // Rương đứng yên, không cần cập nhật logic mỗi frame.
     }
 
     @Override
     public void draw(Graphics2D g2, Camera camera) {
-        int screenX = (int) x - camera.getX();
-        int screenY = (int) y - camera.getY();
-        if (sprite != null) {
-            g2.drawImage(sprite, screenX, screenY, width, height, null);
-        }
+        g2.setColor(open ? new Color(90, 60, 30) : new Color(150, 100, 40));
+        g2.fillRect(screenX(camera) + 6, screenY(camera) + 12, width - 12, height - 18);
     }
 
     @Override
     public void onInteract(Player player) {
-        if (isOpen) return;
-        isOpen = true;
-        // TODO (Dev 4): sinh ngẫu nhiên vật phẩm vào danh sách loot rồi báo cho
-        // PlayState (Dev 1) biết để "spawn" các Item đó ra xung quanh vị trí rương.
+        open = true; // Bản khung: chỉ đánh dấu là đã mở
     }
 
     @Override
     public String getInteractionPrompt() {
-        return isOpen ? "" : "Nhan [E] de mo ruong";
+        return "Nhấn [E] để mở rương";
+    }
+
+    @Override
+    public boolean canInteract() {
+        return !open;
     }
 
     public boolean isOpen() {
-        return isOpen;
+        return open;
+    }
+
+    public boolean isGolden() {
+        return golden;
     }
 }
