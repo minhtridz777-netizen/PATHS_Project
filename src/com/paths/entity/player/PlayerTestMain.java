@@ -15,7 +15,7 @@ import com.paths.core.World;
  *
  * Giai đoạn 1: kiểm tra đi 8 hướng, đi chéo không nhanh hơn đi thẳng, hoạt ảnh bước chân.
  * (Chưa có bản đồ và va chạm tường: đó là việc của Dev 3, sẽ có sau khi Leader ghép code.)
- * Try to change smthfor real dog :vv
+ * Test thử nhé
  */
 public class PlayerTestMain {
 
