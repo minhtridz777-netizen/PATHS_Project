@@ -1,12 +1,12 @@
 package com.paths.entity.player;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 import com.paths.core.GamePanel;
 import com.paths.core.KeyHandler;
 import com.paths.core.World;
+import com.paths.entity.Direction;
 import com.paths.entity.Entity;
 import com.paths.inventory.Inventory;
 import com.paths.world.Camera;
@@ -18,10 +18,12 @@ public class Player extends Entity {
 
     private final World world;
     private final KeyHandler keys;
-    private final Inventory inventory = new Inventory(20); // Túi đồ (class của Dev 5)
+    private final Inventory inventory = new Inventory(20);
+    private final PlayerAnimator animator = new PlayerAnimator();
 
     private int gold = 0;
     private int attackBonus = 0;
+    private boolean moving = false;
 
     public Player(World world, KeyHandler keys) {
         super(0, 0, GamePanel.TILE_SIZE, GamePanel.TILE_SIZE, 100, 4);
@@ -31,22 +33,58 @@ public class Player extends Entity {
 
     @Override
     public void update() {
-        // TODO (Dev 2, Giai đoạn 1): đọc phím và di chuyển
+        updateCommonTimers(world.getCollisionChecker()); // Luôn gọi đầu tiên (hiệu ứng trúng đòn, đẩy lùi)
+        handleMovement();
+        animator.update(moving);
+    }
+
+    /** Đọc phím WASD, tính hướng đi rồi di chuyển có kiểm tra va chạm */
+    private void handleMovement() {
+        double dx = 0;
+        double dy = 0;
+        if (keys.upPressed) dy -= 1;
+        if (keys.downPressed) dy += 1;
+        if (keys.leftPressed) dx -= 1;
+        if (keys.rightPressed) dx += 1;
+
+        moving = dx != 0 || dy != 0;
+        if (!moving) {
+            return;
+        }
+
+        // Hướng nhìn: đi chéo thì ưu tiên hướng ngang (giống đa số game top-down)
+        if (dy < 0) direction = Direction.UP;
+        if (dy > 0) direction = Direction.DOWN;
+        if (dx < 0) direction = Direction.LEFT;
+        if (dx > 0) direction = Direction.RIGHT;
+
+        double length = Math.hypot(dx, dy);
+        dx = dx / length * speed;
+        dy = dy / length * speed;
+
+        moveWithCollision(dx, dy, world.getCollisionChecker());
     }
 
     @Override
     public void attack() {
-        // TODO (Dev 2, Giai đoạn 2): vung kiếm gây sát thương lên quái
+        // Giai đoạn 2
     }
 
     @Override
     public void draw(Graphics2D g2, Camera camera) {
-        // Bản khung: vẽ tạm ô vuông xanh để cả nhóm thấy vị trí Player
-        g2.setColor(new Color(60, 200, 140));
-        g2.fillRect(screenX(camera), screenY(camera), width, height);
+        animator.draw(g2, screenX(camera), screenY(camera), width, direction, isHurt());
     }
 
-    /** Vùng kiếm chém trúng (Giai đoạn 2). Bản khung trả về khung rỗng */
+    /**
+     * Hitbox nhỏ hơn hình vẽ: chỉ lấy phần thân dưới (24 x 26 px).
+     * Nhờ vậy đầu nhân vật "chồng" lên tường phía trên một chút, nhìn tự nhiên hơn,
+     * và dễ đi lọt qua lối đi rộng đúng 1 ô.
+     */
+    @Override
+    public Rectangle getBounds() {
+        return new Rectangle((int) x + 12, (int) y + 20, width - 24, height - 22);
+    }
+
     public Rectangle getAttackBox() {
         return new Rectangle();
     }
@@ -55,7 +93,6 @@ public class Player extends Entity {
         return false;
     }
 
-    /** Sức tấn công = sát thương gốc + cộng thêm từ trang bị (vd nhặt được Kiếm sắt) */
     public int getAttackPower() {
         return BASE_DAMAGE + attackBonus;
     }
