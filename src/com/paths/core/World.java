@@ -18,6 +18,8 @@ import com.paths.world.Camera;
 import com.paths.world.CollisionChecker;
 import com.paths.world.LightingEffect;
 import com.paths.world.TileManager;
+import com.paths.entity.monster.Skeleton;
+import com.paths.entity.monster.Slime;
 
 /**
  * Dev 1. Toàn bộ thế giới của 1 ván chơi: bản đồ, camera, Player, quái, vật phẩm, rương, NPC, nhiệm vụ, UI.
@@ -58,11 +60,26 @@ public class World {
     }
 
     /**
-     * Đặt người chơi, quái, rương, NPC lên bản đồ. Tọa độ tính theo Ô (tile), dùng hàm tile(n).
-     * TODO (Dev 1): mỗi giai đoạn thêm dần nội dung (xem file hướng dẫn của Leader).
+     * Đặt người chơi, quái, rương, NPC lên bản đồ. Tọa độ tính theo Ô (cột, hàng), dùng hàm tile(n).
+     * Mọi vị trí bên dưới đã được kiểm tra là ô đi được trên map01.txt của Dev 3.
      */
     public void spawnLevel() {
         player.setPosition(tile(6), tile(6));
+
+        // Slime ở đồng cỏ bên trái sông
+        int[][] slimes = {{12, 11}, {15, 17}, {10, 18}, {13, 24}, {4, 13}, {16, 10}};
+        for (int[] p : slimes) {
+            addMonster(new Slime(this, tile(p[0]), tile(p[1])));
+        }
+
+        // Skeleton trong rừng (bên phải sông) và trong hầm ngục
+        int[][] skeletons = {{25, 5}, {30, 8}, {35, 4}, {27, 11}, {36, 10}, {28, 20}, {34, 20}};
+        for (int[] p : skeletons) {
+            addMonster(new Skeleton(this, tile(p[0]), tile(p[1])));
+        }
+
+        // Boss trong phòng cuối hầm ngục (chiếm 2x2 ô: cột 30-31, hàng 24-25)
+        addMonster(new Boss(this, tile(30), tile(24)));
     }
 
     /** Cập nhật cả thế giới mỗi frame. Thứ tự: bản đồ -> UI -> người chơi -> quái -> đồ vật -> camera */
