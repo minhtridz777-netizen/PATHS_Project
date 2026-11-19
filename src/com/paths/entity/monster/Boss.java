@@ -5,6 +5,8 @@ import java.awt.Graphics2D;
 
 import com.paths.core.GamePanel;
 import com.paths.core.World;
+import com.paths.entity.GameObject;
+import com.paths.entity.monster.ai.ChaseBehavior;
 
 /** Dev 4. Boss "Chúa tể Bóng tối" ở cuối hầm ngục: 400 máu, to 2x2 ô, có chiêu thức riêng. */
 public class Boss extends Monster {
@@ -51,9 +53,17 @@ public class Boss extends Monster {
         fill(g2, sx, sy, CROWN, 7, -1, 2, 1);
         fill(g2, sx, sy, CROWN, 10, -1, 1, 1);
     }
-
+    /**
+     * OVERRIDE để Boss "lì đòn": chỉ bị đẩy lùi 25% so với quái thường.
+     * Gọi super.applyKnockback() với lực nhỏ hơn -> tái sử dụng code của Entity.
+     */
+    @Override
+    public void applyKnockback(GameObject source, double force) {
+        super.applyKnockback(source, force * 0.25);
+    }
+    /** Boss đang đánh nhau = còn sống và đang ở trạng thái rượt đuổi */
     public boolean isEngaged() {
-        return false; // Giai đoạn 2
+        return alive && aiState instanceof ChaseBehavior;
     }
 
     public String getDisplayName() {

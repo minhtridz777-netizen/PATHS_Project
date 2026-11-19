@@ -4,6 +4,7 @@ import java.util.Random;
 
 import com.paths.core.GamePanel;
 import com.paths.entity.monster.Monster;
+import com.paths.entity.player.Player;
 
 /**
  * Dev 4. Tuần tra: đi tới một điểm ngẫu nhiên quanh nhà, nghỉ, rồi chọn điểm khác.
@@ -22,7 +23,11 @@ public class PatrolBehavior implements AIState {
 
     @Override
     public void execute(Monster monster) {
-        // Giai đoạn 2: thêm đoạn phát hiện Player ở đây
+        Player player = monster.getWorld().getPlayer();
+        if (!player.isDead() && monster.distanceToPlayer() < monster.getDetectionRange()) {
+            monster.setAIState(new ChaseBehavior());
+            return;
+        }
 
         if (waitTimer > 0) {
             waitTimer--;
