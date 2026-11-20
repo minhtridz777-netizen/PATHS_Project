@@ -202,6 +202,30 @@ details.final { border: 1px dashed var(--line); border-radius: var(--radius); pa
 h3.lesson { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); }
 h3.lesson .lesson-no { display: inline-block; font-family: var(--font-pixel); font-size: 13px; background: var(--accent); color: var(--accent-ink); border-radius: 5px; padding: 3px 9px; margin-right: 10px; vertical-align: 3px; letter-spacing: 0.04em; }
 .callout-ex { --kind: var(--c-where); }
+.callout-plus {
+  --kind: #c95818;
+  background: linear-gradient(180deg, #fffaf2 0%, #ffffff 100%);
+  border: 1px dashed #e5a97c;
+  border-left: 4px solid #c95818;
+}
+.callout-plus .callout-label::before {
+  content: "MỚI";
+  display: inline-block;
+  background: #c95818;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 7px;
+  vertical-align: 1px;
+  letter-spacing: 0.06em;
+}
+.callout-intro {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 4px 0 8px;
+}
 .toc .toc-2.done > a::after { content: " ✓"; color: var(--c-run); font-weight: 700; }
 .code-actions { display: flex; align-items: center; gap: 8px; }
 .code-lines { font-size: 11.5px; color: var(--code-muted); }
