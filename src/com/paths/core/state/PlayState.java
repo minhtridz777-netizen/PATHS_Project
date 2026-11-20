@@ -16,9 +16,13 @@ import com.paths.world.Camera;
 /** Dev 1. Màn hình đang chơi: tạo World khi bắt đầu ván rồi giao cho World update/vẽ mỗi frame. */
 public class PlayState implements GameState {
     private static final Font DEBUG_FONT = new Font("Monospaced", Font.BOLD, 13);
+    private static final Font TITLE_FONT = new Font("Serif", Font.BOLD, 44);
+    private static final Font HINT_FONT = new Font("SansSerif", Font.PLAIN, 18);
+    private static final int DEATH_DELAY = 60;
     private final GameStateManager manager;
     private World world;
     private boolean debug = false;
+    private int deathTimer = 0;
 
     public PlayState(GameStateManager manager) {
         this.manager = manager;
@@ -27,9 +31,14 @@ public class PlayState implements GameState {
     @Override
     public void onEnter() {
         if (world == null) { // Chỉ tạo World ở lần vào đầu tiên, quay lại từ Pause thì giữ nguyên
-            world = new World(manager.getGamePanel().getKeyHandler());
-            world.spawnLevel();
+            startNewGame();
         }
+    }
+
+    private void startNewGame() {
+        world = new World(manager.getGamePanel().getKeyHandler());
+        world.spawnLevel();
+        deathTimer = 0;
     }
 
     @Override
@@ -38,6 +47,13 @@ public class PlayState implements GameState {
             debug = !debug;
         }
         world.update();
+
+        if (world.getPlayer().isDead()) {
+            deathTimer++;
+            if (deathTimer > DEATH_DELAY && world.getKeyHandler().consumePress(KeyEvent.VK_ENTER)) {
+                startNewGame();
+            }
+        }
     }
 
     @Override
@@ -46,6 +62,24 @@ public class PlayState implements GameState {
         if (debug) {
             drawDebug(g2);
         }
+        if (deathTimer > DEATH_DELAY) {
+            drawDeathScreen(g2);
+        }
+    }
+
+    private void drawDeathScreen(Graphics2D g2) {
+        int alpha = Math.min(170, (deathTimer - DEATH_DELAY) * 6); // Tối dần
+        g2.setColor(new Color(20, 0, 0, alpha));
+        g2.fillRect(0, 0, GamePanel.SCREEN_WIDTH, GamePanel.SCREEN_HEIGHT);
+        drawCentered(g2, "Chúc bạn may mắn lần sau :3", TITLE_FONT, new Color(230, 80, 70), 260);
+        drawCentered(g2, "Nhấn ENTER để chơi lại", HINT_FONT, Color.WHITE, 310);
+    }
+
+    private void drawCentered(Graphics2D g2, String text, Font font, Color color, int y) {
+        g2.setFont(font);
+        int w = g2.getFontMetrics().stringWidth(text);
+        g2.setColor(color);
+        g2.drawString(text, (GamePanel.SCREEN_WIDTH - w) / 2, y);
     }
 
     private void drawDebug(Graphics2D g2) {
