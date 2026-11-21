@@ -11,10 +11,19 @@ import com.paths.entity.Entity;
 import com.paths.inventory.Inventory;
 import com.paths.world.Camera;
 
+import java.util.HashSet;
+import java.util.Set;
+import com.paths.entity.monster.Monster;
+import com.paths.world.CollisionChecker;
+
 /** Dev 2. Nhân vật chính: di chuyển, chém, bị đánh, tương tác, nhặt đồ, lướt. */
 public class Player extends Entity {
 
     public static final int BASE_DAMAGE = 10;
+    private static final int ATTACK_DURATION = 14;
+    private static final int ATTACK_COOLDOWN = 22;
+    private static final int INVINCIBLE_FRAMES = 50;
+    private static final int ATTACK_REACH = 40;
 
     private final World world;
     private final KeyHandler keys;
@@ -24,6 +33,10 @@ public class Player extends Entity {
     private int gold = 0;
     private int attackBonus = 0;
     private boolean moving = false;
+    private int attackTimer = 0;
+    private int attackCooldown = 0;
+    private int invincibleTimer = 0;
+    private final Set<Monster> hitThisSwing = new HashSet<>();
 
     public Player(World world, KeyHandler keys) {
         super(0, 0, GamePanel.TILE_SIZE, GamePanel.TILE_SIZE, 100, 4);
@@ -34,7 +47,22 @@ public class Player extends Entity {
     @Override
     public void update() {
         updateCommonTimers(world.getCollisionChecker()); // Luôn gọi đầu tiên (hiệu ứng trúng đòn, đẩy lùi)
-        handleMovement();
+        if (!alive) {
+            moving = false;
+            return;
+        }
+        if (invincibleTimer > 0) invincibleTimer--;
+        if (attackCooldown > 0) attackCooldown--;
+
+        if (attackTimer > 0) {
+            attackTimer--;
+            applyAttackHits(); // Đang chém thì đứng yên, chỉ kiểm tra trúng quái
+        } else {
+            handleMovement();
+            if (keys.attackPressed && attackCooldown == 0) {
+                attack();
+            }
+        }
         animator.update(moving);
     }
 
@@ -65,14 +93,39 @@ public class Player extends Entity {
         moveWithCollision(dx, dy, world.getCollisionChecker());
     }
 
+    /** Bắt đầu 1 nhát chém */
     @Override
     public void attack() {
-        // Giai đoạn 2
+        attackTimer = ATTACK_DURATION;
+        attackCooldown = ATTACK_COOLDOWN;
+        hitThisSwing.clear();
+        moving = false;
+    }
+
+    /** Quái nào nằm trong vùng chém và chưa trúng nhát này thì mất máu + bị đẩy lùi */
+    private void applyAttackHits() {
+        Rectangle box = getAttackBox();
+        CollisionChecker cc = world.getCollisionChecker();
+        for (Monster m : world.getMonsters()) {
+            if (m.isDead() || hitThisSwing.contains(m)) {
+                continue;
+            }
+            if (cc.intersects(box, m)) {
+                m.takeDamage(getAttackPower());
+                m.applyKnockback(this, 7);
+                hitThisSwing.add(m);
+            }
+        }
     }
 
     @Override
     public void draw(Graphics2D g2, Camera camera) {
-        animator.draw(g2, screenX(camera), screenY(camera), width, direction, isHurt());
+        // Nhấp nháy khi bất tử: cứ 4 frame ẩn, 4 frame hiện
+        if (alive && invincibleTimer > 0 && (invincibleTimer / 4) % 2 == 0) {
+            return;
+        }
+        double attackProgress = isAttacking() ? 1.0 - (double) attackTimer / ATTACK_DURATION : -1;
+        animator.draw(g2, screenX(camera), screenY(camera), width, direction, isHurt(), attackProgress, !alive);
     }
 
     /**
@@ -85,12 +138,42 @@ public class Player extends Entity {
         return new Rectangle((int) x + 12, (int) y + 20, width - 24, height - 22);
     }
 
+    /**
+     * Vùng chém: hình chữ nhật dài ATTACK_REACH px nằm trước mặt, theo hướng đang nhìn.
+     * Tính từ hitbox thân (getBounds) để vùng chém luôn sát người.
+     */
     public Rectangle getAttackBox() {
-        return new Rectangle();
+        if (!isAttacking()) {
+            return new Rectangle();
+        }
+        Rectangle b = getBounds();
+        int cx = b.x + b.width / 2;
+        int cy = b.y + b.height / 2;
+        int r = ATTACK_REACH;
+        return switch (direction) {
+            case UP -> new Rectangle(cx - 24, b.y - r, 48, r + 4);
+            case DOWN -> new Rectangle(cx - 24, b.y + b.height - 4, 48, r + 4);
+            case LEFT -> new Rectangle(b.x - r, cy - 24, r + 4, 48);
+            case RIGHT -> new Rectangle(b.x + b.width - 4, cy - 24, r + 4, 48);
+        };
+    }
+
+    @Override
+    public void takeDamage(int amount) {
+        if (invincibleTimer > 0 || !alive) {
+            return;
+        }
+        super.takeDamage(amount); // Dùng lại logic trừ máu của Entity
+        invincibleTimer = INVINCIBLE_FRAMES;
+        world.getCamera().shake(12, 5);
     }
 
     public boolean isAttacking() {
-        return false;
+        return attackTimer > 0;
+    }
+
+    public boolean isInvincible() {
+        return invincibleTimer > 0;
     }
 
     public int getAttackPower() {
