@@ -1,15 +1,18 @@
 package com.paths.entity.player;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
 import com.paths.entity.Direction;
 
 /** Dev 2. Vẽ nhân vật pixel-art trên lưới 16x16 và các hoạt ảnh của nhân vật. */
 public class PlayerAnimator {
 
-    private static final int FRAME_DURATION = 8; // 8 frame game = 1 khung hoạt ảnh (~7.5 khung/giây)
+    private static final int FRAME_DURATION = 8;
 
-    // Bảng màu nhân vật
     private static final Color SKIN = new Color(242, 199, 154);
     private static final Color HAIR = new Color(92, 58, 30);
     private static final Color TUNIC = new Color(58, 143, 92);
@@ -19,11 +22,12 @@ public class PlayerAnimator {
     private static final Color EYE = new Color(30, 30, 40);
     private static final Color SHADOW = new Color(0, 0, 0, 70);
     private static final Color HURT = new Color(230, 60, 60);
+    private static final Color BLADE = new Color(222, 230, 240);
+    private static final Color HILT = new Color(150, 100, 50);
 
     private int counter = 0;
     private int walkFrame = 0;
 
-    // Biến tạm cho lần vẽ hiện tại, để các hàm fill() ngắn gọn
     private Graphics2D g2;
     private int ox, oy;
     private double unit;
@@ -42,35 +46,54 @@ public class PlayerAnimator {
         }
     }
 
-    /** Vẽ nhân vật tại tọa độ màn hình (sx, sy), kích thước size x size */
-    public void draw(Graphics2D g2, int sx, int sy, int size, Direction dir, boolean hurt) {
+    /**
+     * @param attackProgress -1 nếu không chém, 0.0 -> 1.0 nếu đang chém
+     * @param dead           true thì vẽ nằm gục
+     */
+    public void draw(Graphics2D g2, int sx, int sy, int size, Direction dir,
+                     boolean hurt, double attackProgress, boolean dead) {
         this.g2 = g2;
         this.ox = sx;
         this.oy = sy;
         this.unit = size / 16.0;
-        this.hurt = hurt;
+        this.hurt = hurt || dead;
 
-        int step = switch (walkFrame) {
+        if (dead) {
+            AffineTransform saved = g2.getTransform();
+            g2.rotate(Math.PI / 2, sx + size / 2.0, sy + size / 2.0);
+            drawBody(Direction.DOWN, 0, 0);
+            g2.setTransform(saved);
+            return;
+        }
+
+        boolean attacking = attackProgress >= 0;
+        // Chém lên trên thì kiếm nằm SAU người -> vẽ kiếm trước rồi vẽ người đè lên
+        if (attacking && dir == Direction.UP) {
+            drawSword(sx, sy, size, dir, attackProgress);
+        }
+        int step = attacking ? 0 : switch (walkFrame) {
             case 1 -> 1;
             case 3 -> -1;
             default -> 0;
         };
-        int bob = walkFrame % 2 == 1 ? 1 : 0; // Người hơi nhún xuống khi bước
+        int bob = !attacking && walkFrame % 2 == 1 ? 1 : 0;
+        drawBody(dir, step, bob);
+        if (attacking && dir != Direction.UP) {
+            drawSword(sx, sy, size, dir, attackProgress);
+        }
+    }
 
-        // Bóng dưới chân
+    private void drawBody(Direction dir, int step, int bob) {
         g2.setColor(SHADOW);
         g2.fillOval(ox + (int) (3 * unit), oy + (int) (13.5 * unit), (int) (10 * unit), (int) (3 * unit));
 
-        // Chân (2 chân lệch nhau khi bước)
         fill(PANTS, 5, 12 + Math.max(0, step), 2, 3 - Math.max(0, step));
         fill(PANTS, 9, 12 + Math.max(0, -step), 2, 3 - Math.max(0, -step));
 
-        // Thân + thắt lưng
         fill(TUNIC, 4, 7 + bob, 8, 5);
         fill(TUNIC_DARK, 4, 11 + bob, 8, 1);
         fill(BELT, 4, 10 + bob, 8, 1);
 
-        // Tay vung ngược chiều chân
         if (dir == Direction.LEFT || dir == Direction.RIGHT) {
             int handX = dir == Direction.LEFT ? 6 : 8;
             fill(SKIN, handX + step, 8 + bob, 2, 3);
@@ -78,7 +101,6 @@ public class PlayerAnimator {
             fill(SKIN, 3, 8 + bob + Math.max(0, -step), 1, 3);
             fill(SKIN, 12, 8 + bob + Math.max(0, step), 1, 3);
         }
-
         drawHead(dir, bob);
     }
 
@@ -106,7 +128,41 @@ public class PlayerAnimator {
         }
     }
 
-    /** Tô 1 khối trên lưới 16x16. Khi bị thương thì mọi màu đều ngả sang đỏ */
+    /** Vẽ lưỡi kiếm quét 1 cung 140 độ trước mặt */
+    private void drawSword(int sx, int sy, int size, Direction dir, double progress) {
+        double base = switch (dir) {
+            case RIGHT -> 0;
+            case DOWN -> Math.PI / 2;
+            case LEFT -> Math.PI;
+            case UP -> -Math.PI / 2;
+        };
+        double sweep = Math.toRadians(140);
+        double angle = base - sweep / 2 + sweep * progress;
+
+        double cx = sx + size / 2.0;
+        double cy = sy + size * 0.62;
+        double length = size * 0.75;
+
+        // Vệt chém mờ dần theo thời gian
+        int alpha = (int) (110 * (1 - progress));
+        g2.setColor(new Color(255, 255, 255, Math.max(0, alpha)));
+        double startDeg = -Math.toDegrees(base - sweep / 2);
+        double extentDeg = -Math.toDegrees(sweep * progress);
+        g2.fill(new Arc2D.Double(cx - length, cy - length, length * 2, length * 2, startDeg, extentDeg, Arc2D.PIE));
+
+        Stroke saved = g2.getStroke();
+        double tipX = cx + Math.cos(angle) * length;
+        double tipY = cy + Math.sin(angle) * length;
+        double hiltX = cx + Math.cos(angle) * size * 0.2;
+        double hiltY = cy + Math.sin(angle) * size * 0.2;
+        g2.setStroke(new BasicStroke((float) (unit * 1.6f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2.setColor(BLADE);
+        g2.drawLine((int) hiltX, (int) hiltY, (int) tipX, (int) tipY);
+        g2.setColor(HILT);
+        g2.drawLine((int) cx, (int) cy, (int) hiltX, (int) hiltY);
+        g2.setStroke(saved);
+    }
+
     private void fill(Color color, double gx, double gy, double gw, double gh) {
         g2.setColor(hurt ? blend(color, HURT) : color);
         int x0 = ox + (int) Math.round(gx * unit);
