@@ -1,5 +1,8 @@
 package com.paths.entity.monster;
-
+import java.util.List;
+import com.paths.entity.object.Item;
+import com.paths.entity.object.ItemType;
+import com.paths.entity.object.LootTable;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -51,7 +54,8 @@ public abstract class Monster extends Entity {
 
     /** Vẽ hình dáng riêng của từng loại quái tại tọa độ màn hình (sx, sy) */
     protected abstract void drawBody(Graphics2D g2, int sx, int sy);
-
+    /** Mỗi loại quái tự định nghĩa rơi ra gì, tỉ lệ bao nhiêu (ĐA HÌNH) */
+    protected abstract LootTable getLootTable();
     @Override
     public void update() {
         animCounter++;
@@ -87,11 +91,23 @@ public abstract class Monster extends Entity {
         attackCooldown = ATTACK_COOLDOWN;
     }
     /** Entity gọi hàm này đúng 1 lần khi máu về 0 */
+    /** Entity gọi hàm này đúng 1 lần khi máu về 0 */
     @Override
     protected void onDeath() {
         world.onMonsterKilled(this);
+        dropLoot();
     }
-    @Override
+    /** Tung xúc xắc bảng rơi đồ, đặt vật phẩm thành vòng tròn nhỏ quanh chỗ quái chết */
+    protected void dropLoot() {
+        List<ItemType> drops = getLootTable().roll();
+        for (int i = 0; i < drops.size(); i++) {
+            double angle = i * 2 * Math.PI / drops.size();
+            double radius = drops.size() == 1 ? 0 : 20;
+            double ix = getCenterX() - Item.SIZE / 2.0 + Math.cos(angle) * radius;
+            double iy = getCenterY() - Item.SIZE / 2.0 + Math.sin(angle) * radius;
+            world.addItem(new Item(ix, iy, drops.get(i)));
+        }
+    }
     public void draw(Graphics2D g2, Camera camera) {
         int sx = screenX(camera);
         int sy = screenY(camera);

@@ -1,5 +1,6 @@
 package com.paths.entity.monster;
-
+import com.paths.entity.object.ItemType;
+import com.paths.entity.object.LootTable;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
@@ -9,7 +10,8 @@ import com.paths.entity.Direction;
 
 /** Dev 4. Skeleton: 50 máu, nhanh gấp đôi Slime, chạm vào mất 12 máu. */
 public class Skeleton extends Monster {
-
+    /** 80% Túi vàng, 35% Bình máu, 10% Ngọc quý */
+    private static final LootTable LOOT = new LootTable().add(ItemType.GOLD, 0.8).add(ItemType.POTION, 0.35).add(ItemType.GEM, 0.1);
     private static final Color BONE = new Color(232, 228, 214);
     private static final Color BONE_DARK = new Color(170, 164, 150);
     private static final Color HOLE = new Color(40, 30, 40);
@@ -18,7 +20,10 @@ public class Skeleton extends Monster {
     public Skeleton(World world, double x, double y) {
         super(world, x, y, GamePanel.TILE_SIZE, GamePanel.TILE_SIZE, 50, 2, 12);
     }
-
+    @Override
+    protected LootTable getLootTable() {
+        return LOOT;
+    }
     @Override
     public String getKind() {
         return "SKELETON";
