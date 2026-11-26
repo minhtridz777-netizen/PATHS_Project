@@ -1,5 +1,6 @@
 package com.paths.entity.monster;
-
+import com.paths.entity.object.ItemType;
+import com.paths.entity.object.LootTable;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
@@ -10,7 +11,8 @@ import com.paths.entity.monster.ai.ChaseBehavior;
 
 /** Dev 4. Boss "Chúa tể Bóng tối" ở cuối hầm ngục: 400 máu, to 2x2 ô, có chiêu thức riêng. */
 public class Boss extends Monster {
-
+    /** chắc chắn rơi 2 Ngọc quý, 1 Túi vàng, 1 Bình máu */
+    private static final LootTable LOOT = new LootTable().add(ItemType.GEM, 1).add(ItemType.GEM, 1).add(ItemType.GOLD, 1).add(ItemType.POTION, 1);
     private static final Color ROBE = new Color(74, 44, 110);
     private static final Color ROBE_DARK = new Color(46, 26, 72);
     private static final Color CROWN = new Color(232, 186, 64);
@@ -22,7 +24,10 @@ public class Boss extends Monster {
         detectionRange = GamePanel.TILE_SIZE * 5;
         loseRange = GamePanel.TILE_SIZE * 12;
     }
-
+    @Override
+    protected LootTable getLootTable() {
+        return LOOT;
+    }
     @Override
     public String getKind() {
         return "BOSS";
