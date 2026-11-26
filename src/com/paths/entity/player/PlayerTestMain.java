@@ -3,24 +3,25 @@ package com.paths.entity.player;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 
 import com.paths.core.GamePanel;
 import com.paths.core.KeyHandler;
 import com.paths.core.TestWindow;
 import com.paths.core.World;
-import com.paths.entity.monster.Monster;
-import com.paths.entity.monster.Slime;
-import com.paths.world.Camera;
+import com.paths.entity.object.Chest;
+import com.paths.entity.object.Item;
+import com.paths.entity.object.ItemType;
+import com.paths.interfaces.IInteractable;
 
 /**
- * PHỤ TRÁCH: Dev 2 — BẢN GIAI ĐOẠN 2: thử chém quái và bị đánh.
+ * PHỤ TRÁCH: Dev 2 — BẢN GIAI ĐOẠN 3: thử bấm E và tự nhặt đồ.
  * Chuột phải vào file -> Run 'PlayerTestMain.main()'
  *
- * Bản đồ và Slime đã có từ Giai đoạn 1 (Leader đã ghép), nên ở đây dùng luôn.
- *   SPACE: chém (vùng chém hiện khung vàng)     K: tự nhận 10 sát thương (thử bất tử + nháy)
- * Số trên đầu Slime là máu còn lại (Slime 30 máu, mỗi nhát chém 10 -> 3 nhát chết).
+ * Rương và vật phẩm ở nhánh của Dev 2 vẫn là BẢN KHUNG (Dev 4 đang làm bản đẹp song song):
+ * rương là ô nâu, vật phẩm là ô vàng. Chỉ cần kiểm tra:
+ *   - Đứng gần rương thấy dòng "Gần: ..." ở dưới, bấm E thì rương chuyển màu tối (đã mở).
+ *   - Đi chạm ô vàng thì ô biến mất (đã nhặt).
  */
 public class PlayerTestMain {
 
@@ -29,38 +30,32 @@ public class PlayerTestMain {
         World world = new World(keys);
         Player player = world.getPlayer();
         player.setPosition(World.tile(6), World.tile(11));
-        world.addMonster(new Slime(world, World.tile(9), World.tile(11)));
-        world.addMonster(new Slime(world, World.tile(4), World.tile(12)));
-        world.addMonster(new Slime(world, World.tile(7), World.tile(9)));
 
-        TestWindow.open("Player - chiến đấu", keys,
+        world.addChest(new Chest(world, World.tile(9), World.tile(11), false));
+        world.addChest(new Chest(world, World.tile(4), World.tile(12), true));
+        world.addItem(new Item(World.tile(7), World.tile(13), ItemType.GOLD));
+        world.addItem(new Item(World.tile(9), World.tile(13), ItemType.POTION));
+        world.addItem(new Item(World.tile(11), World.tile(13), ItemType.SWORD));
+
+        TestWindow.open("Player - tương tác", keys,
                 () -> {
-                    if (keys.consumePress(KeyEvent.VK_K)) player.takeDamage(10);
+                    if (keys.consumePress(KeyEvent.VK_U)) player.addAttackBonus(5); // Giả lập nhặt Kiếm sắt
                     world.update();
                 },
                 g2 -> {
                     world.render(g2);
-                    Camera cam = world.getCamera();
-                    g2.setFont(new Font("SansSerif", Font.BOLD, 13));
-                    for (Monster m : world.getMonsters()) {
-                        g2.setColor(Color.WHITE);
-                        g2.drawString(m.getCurrentHp() + " HP", m.screenX(cam) + 8, m.screenY(cam) - 4);
-                    }
-                    Rectangle box = player.getAttackBox();
-                    if (!box.isEmpty()) {
-                        g2.setColor(Color.YELLOW);
-                        g2.drawRect(box.x - cam.getX(), box.y - cam.getY(), box.width, box.height);
-                    }
-                    drawInfo(g2, player);
+                    drawInfo(g2, world, player);
                 });
     }
 
-    private static void drawInfo(Graphics2D g2, Player p) {
+    private static void drawInfo(Graphics2D g2, World world, Player p) {
+        IInteractable near = world.findNearestInteractable(p, GamePanel.TILE_SIZE * 1.3);
         g2.setColor(new Color(0, 0, 0, 150));
         g2.fillRect(0, GamePanel.SCREEN_HEIGHT - 26, GamePanel.SCREEN_WIDTH, 26);
         g2.setFont(new Font("SansSerif", Font.PLAIN, 14));
         g2.setColor(Color.WHITE);
-        g2.drawString("SPACE: chém   K: tự nhận 10 sát thương   |   HP " + p.getCurrentHp()
-                + (p.isInvincible() ? "  (đang bất tử)" : ""), 10, GamePanel.SCREEN_HEIGHT - 8);
+        g2.drawString("E: tương tác   U: giả lập nhặt kiếm   |   Gần: " + (near == null ? "(không có)" : near.getInteractionPrompt())
+                        + "   |   Vật phẩm còn trên đất: " + world.getItems().size(),
+                10, GamePanel.SCREEN_HEIGHT - 8);
     }
 }

@@ -24,6 +24,8 @@ public class PlayerAnimator {
     private static final Color HURT = new Color(230, 60, 60);
     private static final Color BLADE = new Color(222, 230, 240);
     private static final Color HILT = new Color(150, 100, 50);
+    private static final Color BLADE_UPGRADED = new Color(120, 220, 255);
+    private static final Color HILT_UPGRADED = new Color(232, 186, 64);
 
     private int counter = 0;
     private int walkFrame = 0;
@@ -32,6 +34,7 @@ public class PlayerAnimator {
     private int ox, oy;
     private double unit;
     private boolean hurt;
+    private boolean upgraded;
 
     public void update(boolean moving) {
         if (moving) {
@@ -49,14 +52,16 @@ public class PlayerAnimator {
     /**
      * @param attackProgress -1 nếu không chém, 0.0 -> 1.0 nếu đang chém
      * @param dead           true thì vẽ nằm gục
+     * @param upgradedSword  true thì vẽ kiếm xịn (đã nhặt Kiếm sắt)
      */
     public void draw(Graphics2D g2, int sx, int sy, int size, Direction dir,
-                     boolean hurt, double attackProgress, boolean dead) {
+                     boolean hurt, double attackProgress, boolean dead, boolean upgradedSword) {
         this.g2 = g2;
         this.ox = sx;
         this.oy = sy;
         this.unit = size / 16.0;
         this.hurt = hurt || dead;
+        this.upgraded = upgradedSword;
 
         if (dead) {
             AffineTransform saved = g2.getTransform();
@@ -156,9 +161,9 @@ public class PlayerAnimator {
         double hiltX = cx + Math.cos(angle) * size * 0.2;
         double hiltY = cy + Math.sin(angle) * size * 0.2;
         g2.setStroke(new BasicStroke((float) (unit * 1.6f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2.setColor(BLADE);
+        g2.setColor(upgraded ? BLADE_UPGRADED : BLADE);
         g2.drawLine((int) hiltX, (int) hiltY, (int) tipX, (int) tipY);
-        g2.setColor(HILT);
+        g2.setColor(upgraded ? HILT_UPGRADED : HILT);
         g2.drawLine((int) cx, (int) cy, (int) hiltX, (int) hiltY);
         g2.setStroke(saved);
     }

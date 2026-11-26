@@ -16,6 +16,11 @@ import java.util.Set;
 import com.paths.entity.monster.Monster;
 import com.paths.world.CollisionChecker;
 
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import com.paths.entity.object.Item;
+import com.paths.interfaces.IInteractable;
+
 /** Dev 2. Nhân vật chính: di chuyển, chém, bị đánh, tương tác, nhặt đồ, lướt. */
 public class Player extends Entity {
 
@@ -24,6 +29,7 @@ public class Player extends Entity {
     private static final int ATTACK_COOLDOWN = 22;
     private static final int INVINCIBLE_FRAMES = 50;
     private static final int ATTACK_REACH = 40;
+    private static final double INTERACT_RANGE = GamePanel.TILE_SIZE * 1.3;
 
     private final World world;
     private final KeyHandler keys;
@@ -63,7 +69,29 @@ public class Player extends Entity {
                 attack();
             }
         }
+        handleInteraction();
+        pickUpItems();
         animator.update(moving);
+    }
+
+    /** Bấm E: tương tác với rương / NPC gần nhất */
+    private void handleInteraction() {
+        if (keys.consumePress(KeyEvent.VK_E)) {
+            IInteractable target = world.findNearestInteractable(this, INTERACT_RANGE);
+            if (target != null) {
+                target.onInteract(this);
+            }
+        }
+    }
+
+    /** Chạm vào vật phẩm là nhặt. Duyệt trên bản sao vì danh sách có thể thay đổi trong lúc nhặt */
+    private void pickUpItems() {
+        CollisionChecker cc = world.getCollisionChecker();
+        for (Item item : new ArrayList<>(world.getItems())) {
+            if (item.canInteract() && cc.intersects(this, item)) {
+                item.onInteract(this);
+            }
+        }
     }
 
     /** Đọc phím WASD, tính hướng đi rồi di chuyển có kiểm tra va chạm */
@@ -125,7 +153,8 @@ public class Player extends Entity {
             return;
         }
         double attackProgress = isAttacking() ? 1.0 - (double) attackTimer / ATTACK_DURATION : -1;
-        animator.draw(g2, screenX(camera), screenY(camera), width, direction, isHurt(), attackProgress, !alive);
+        animator.draw(g2, screenX(camera), screenY(camera), width, direction, isHurt(), attackProgress,
+                !alive, attackBonus > 0);
     }
 
     /**
