@@ -19,10 +19,15 @@ public class PlayState implements GameState {
     private static final Font TITLE_FONT = new Font("Serif", Font.BOLD, 44);
     private static final Font HINT_FONT = new Font("SansSerif", Font.PLAIN, 18);
     private static final int DEATH_DELAY = 60;
+    private static final int HELP_FRAMES = 360;
+    private static final String[] HELP_LINES = {
+            "WASD / mũi tên : di chuyển", "SPACE : chém", "E : mở rương / nói chuyện",
+            "I : túi đồ      H : uống bình máu", "F3 : chế độ debug"};
     private final GameStateManager manager;
     private World world;
     private boolean debug = false;
     private int deathTimer = 0;
+    private int helpTimer = 0;
 
     public PlayState(GameStateManager manager) {
         this.manager = manager;
@@ -39,6 +44,7 @@ public class PlayState implements GameState {
         world = new World(manager.getGamePanel().getKeyHandler());
         world.spawnLevel();
         deathTimer = 0;
+        helpTimer = HELP_FRAMES;
     }
 
     @Override
@@ -47,6 +53,9 @@ public class PlayState implements GameState {
             debug = !debug;
         }
         world.update();
+        if (helpTimer > 0) {
+            helpTimer--;
+        }
 
         if (world.getPlayer().isDead()) {
             deathTimer++;
@@ -62,8 +71,27 @@ public class PlayState implements GameState {
         if (debug) {
             drawDebug(g2);
         }
+        if (helpTimer > 0) {
+            drawHelp(g2);
+        }
         if (deathTimer > DEATH_DELAY) {
             drawDeathScreen(g2);
+        }
+    }
+
+    /** Bảng phím điều khiển ở giữa phía dưới, mờ dần trong 60 frame cuối */
+    private void drawHelp(Graphics2D g2) {
+        int alpha = Math.min(255, helpTimer * 255 / 60);
+        int w = 300;
+        int h = HELP_LINES.length * 20 + 20;
+        int x = 280; // Lệch phải một chút để không đè lên khung thông báo ở góc dưới trái
+        int y = GamePanel.SCREEN_HEIGHT - h - 110;
+        g2.setColor(new Color(16, 20, 24, Math.min(200, alpha)));
+        g2.fillRoundRect(x, y, w, h, 14, 14);
+        g2.setFont(HINT_FONT.deriveFont(15f));
+        g2.setColor(new Color(255, 255, 255, alpha));
+        for (int i = 0; i < HELP_LINES.length; i++) {
+            g2.drawString(HELP_LINES[i], x + 20, y + 26 + i * 20);
         }
     }
 
