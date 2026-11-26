@@ -21,7 +21,7 @@ import com.paths.interfaces.IInteractable;
  * Rương và vật phẩm ở nhánh của Dev 2 vẫn là BẢN KHUNG (Dev 4 đang làm bản đẹp song song):
  * rương là ô nâu, vật phẩm là ô vàng. Chỉ cần kiểm tra:
  *   - Đứng gần rương thấy dòng "Gần: ..." ở dưới, bấm E thì rương chuyển màu tối (đã mở).
- *   - Đi chạm ô vàng thì ô biến mất (đã nhặt).
+ *   - Đi chạm ô vàng thì ô biến mất (đã nhặt).......
  */
 public class PlayerTestMain {
 
