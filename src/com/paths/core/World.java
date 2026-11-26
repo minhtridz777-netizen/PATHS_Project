@@ -20,6 +20,7 @@ import com.paths.world.LightingEffect;
 import com.paths.world.TileManager;
 import com.paths.entity.monster.Skeleton;
 import com.paths.entity.monster.Slime;
+import com.paths.quest.Quest;
 
 /**
  * Dev 1. Toàn bộ thế giới của 1 ván chơi: bản đồ, camera, Player, quái, vật phẩm, rương, NPC, nhiệm vụ, UI.
@@ -80,6 +81,18 @@ public class World {
 
         // Boss trong phòng cuối hầm ngục (chiếm 2x2 ô: cột 30-31, hàng 24-25)
         addMonster(new Boss(this, tile(30), tile(24)));
+
+        // Rương: 4 rương thường + 1 rương vàng (có Kiếm sắt) giấu trong rừng
+        int[][] chestSpots = {{3, 3}, {11, 27}, {37, 2}, {35, 26}};
+        for (int[] p : chestSpots) {
+            addChest(new Chest(this, tile(p[0]), tile(p[1]), false));
+        }
+        addChest(new Chest(this, tile(33), tile(11), true));
+
+        // Nhiệm vụ (Giai đoạn 4 sẽ chuyển sang để NPC Già làng giao)
+        questManager.addQuest(new Quest("q1", "Dọn dẹp đồng cỏ", "Diệt Slime", "KILL_SLIME", 5));
+        questManager.addQuest(new Quest("q2", "Thợ săn kho báu", "Mở rương", "OPEN_CHEST", 3));
+        questManager.addQuest(new Quest("q3", "Ánh sáng cuối hầm", "Hạ Boss", "KILL_BOSS", 1));
     }
 
     /** Cập nhật cả thế giới mỗi frame. Thứ tự: bản đồ -> UI -> người chơi -> quái -> đồ vật -> camera */
