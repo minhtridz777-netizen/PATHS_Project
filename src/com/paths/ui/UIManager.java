@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.paths.core.GamePanel;
 import com.paths.core.World;
+import com.paths.entity.monster.Boss;
 import com.paths.entity.object.ItemType;
 import com.paths.entity.player.Player;
 
@@ -19,11 +20,14 @@ public class UIManager {
 
     private static final Font HUD_FONT = new Font("SansSerif", Font.BOLD, 14);
     private static final Font MESSAGE_FONT = new Font("SansSerif", Font.PLAIN, 15);
+    private static final Font BOSS_FONT = new Font("Serif", Font.BOLD, 16);
     private static final int MESSAGE_FRAMES = 150; // 150 frame = 2.5 giây
     private static final int MAX_MESSAGES = 4;
 
     protected final World world;
     private final HealthBar playerBar = new HealthBar(48, 20, 200, 16);
+    private final HealthBar bossBar = new HealthBar(234, 104, 300, 14);
+    private final MiniMap miniMap;
     private final List<Message> messages = new ArrayList<>();
 
     /** 1 thông báo: nội dung + số frame còn hiện. Class lồng private vì chỉ UIManager dùng */
@@ -38,6 +42,7 @@ public class UIManager {
 
     public UIManager(World world) {
         this.world = world;
+        this.miniMap = new MiniMap(world, GamePanel.SCREEN_WIDTH - 160, 15, 145);
     }
 
     public void update() {
@@ -49,7 +54,25 @@ public class UIManager {
 
     public void draw(Graphics2D g2) {
         drawStatusPanel(g2);
+        miniMap.draw(g2);
+        drawBossBar(g2);
         drawMessages(g2);
+    }
+
+    /** Thanh máu Boss: chỉ hiện khi Boss còn trên bản đồ và đang đánh nhau với Player */
+    private void drawBossBar(Graphics2D g2) {
+        Boss boss = world.getBoss();
+        if (boss == null || !boss.isEngaged()) {
+            return;
+        }
+        g2.setColor(new Color(16, 20, 24, 200));
+        g2.fillRoundRect(224, 78, 320, 50, 12, 12);
+        g2.setFont(BOSS_FONT);
+        String name = boss.getDisplayName();
+        int nameWidth = g2.getFontMetrics().stringWidth(name);
+        g2.setColor(new Color(214, 170, 255));
+        g2.drawString(name, 384 - nameWidth / 2, 98);
+        bossBar.draw(g2, boss);
     }
 
     /** Bảng góc trên trái: thanh máu, vàng, sức tấn công, số bình máu */

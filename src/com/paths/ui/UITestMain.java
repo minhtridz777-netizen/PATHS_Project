@@ -9,38 +9,41 @@ import com.paths.core.GamePanel;
 import com.paths.core.KeyHandler;
 import com.paths.core.TestWindow;
 import com.paths.core.World;
+import com.paths.entity.monster.Boss;
 import com.paths.entity.player.Player;
 
 /**
- * PHỤ TRÁCH: Dev 5 — chạy riêng phần giao diện với dữ liệu GIẢ.
+ * PHỤ TRÁCH: Dev 5 — BẢN GIAI ĐOẠN 2: thử bản đồ nhỏ, vệt máu trễ, thanh máu Boss.
  * Chuột phải vào file -> Run 'UITestMain.main()'
  *
- * Bấm phím để giả lập sự kiện, xem HUD phản ứng đúng chưa:
- *   K: mất 10 máu    L: hồi 10 máu    G: +10 vàng    M: hiện 1 thông báo
+ * Bản đồ, quái, Player di chuyển đã có từ Giai đoạn 1, nên gọi luôn world.spawnLevel()
+ * của Leader để có đủ quái trên bản đồ nhỏ.
+ *   WASD: đi (chấm trắng trên bản đồ nhỏ chạy theo)   K: -10 máu (xem vệt trễ)   L: +10 máu
+ *   B: vẽ thử thanh máu Boss (bình thường chỉ hiện khi Boss đuổi theo - cần code của Dev 4)
  */
 public class UITestMain {
-
-    private static int messageCount = 0;
 
     public static void main(String[] args) {
         KeyHandler keys = new KeyHandler();
         World world = new World(keys);
+        world.spawnLevel();
         Player player = world.getPlayer();
-        player.setPosition(World.tile(7), World.tile(5));
-        UIManager ui = world.getUIManager();
+        HealthBar testBossBar = new HealthBar(234, 104, 300, 14);
+        boolean[] showBoss = {false}; // Mảng 1 phần tử: mẹo để sửa được biến bên trong lambda
 
-        TestWindow.open("Giao diện (HUD)", keys,
+        TestWindow.open("Giao diện - Giai đoạn 2", keys,
                 () -> {
                     if (keys.consumePress(KeyEvent.VK_K)) player.takeDamage(10);
                     if (keys.consumePress(KeyEvent.VK_L)) player.heal(10);
-                    if (keys.consumePress(KeyEvent.VK_G)) player.addGold(10);
-                    if (keys.consumePress(KeyEvent.VK_M)) ui.showMessage("Thông báo thử số " + (++messageCount));
+                    if (keys.consumePress(KeyEvent.VK_B)) showBoss[0] = !showBoss[0];
                     world.update();
                 },
                 g2 -> {
-                    g2.setColor(new Color(52, 84, 58));
-                    g2.fillRect(0, 0, GamePanel.SCREEN_WIDTH, GamePanel.SCREEN_HEIGHT);
                     world.render(g2);
+                    Boss boss = world.getBoss();
+                    if (showBoss[0] && boss != null) {
+                        testBossBar.draw(g2, boss);
+                    }
                     drawHelp(g2);
                 });
     }
@@ -48,6 +51,7 @@ public class UITestMain {
     private static void drawHelp(Graphics2D g2) {
         g2.setFont(new Font("SansSerif", Font.PLAIN, 13));
         g2.setColor(Color.WHITE);
-        g2.drawString("K: -10 máu   L: +10 máu   G: +10 vàng   M: thông báo", 420, GamePanel.SCREEN_HEIGHT - 12);
+        g2.drawString("WASD: đi   K: -10 máu   L: +10 máu   B: thử thanh máu Boss",
+                360, GamePanel.SCREEN_HEIGHT - 12);
     }
 }
